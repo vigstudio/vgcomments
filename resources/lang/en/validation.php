@@ -11,5 +11,6 @@ return [
     'errors' => [
         'content_duplicate' => 'Duplicate content',
         'not_authorized' => 'You are not authorized to this action.',
+        'nsfw' => 'Image Nswf detected',
     ],
 ];

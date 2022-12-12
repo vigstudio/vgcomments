@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Vigstudio\VgComment\Http\Traits\CommentValidator;
 use Vigstudio\VgComment\Http\Traits\ThrottlesPosts;
 use Vigstudio\VgComment\Models\Comment;
-use Illuminate\Support\Facades\Http;
 
 class FileReposirory extends EloquentReposirory implements FileInterface
 {
@@ -45,17 +44,6 @@ class FileReposirory extends EloquentReposirory implements FileInterface
             $collection = new Collection();
 
             foreach ($request->input('files') as $file) {
-                $mine = Str::before($file->getMimeType(), '/');
-                if ($this->config['nsfw'] && $mine == 'image') {
-                    $isNswf = $this->checkNswf($file);
-
-                    if ($isNswf) {
-                        session()->push('alert', ['error', 'Image Nswf detected']);
-
-                        return false;
-                    }
-                }
-
                 $store = $this->store($file);
                 $collection->push($store);
             }
@@ -150,30 +138,6 @@ class FileReposirory extends EloquentReposirory implements FileInterface
         $file->delete();
 
         return $fileComment;
-    }
-
-    protected function checkNswf(mixed $file)
-    {
-        $params = [
-            'models' => 'nudity-2.0',
-            'api_user' => $this->config['nsfw_api']['user'],
-            'api_secret' => $this->config['nsfw_api']['key'],
-        ];
-
-        $response = Http::attach(
-            'media',
-            $file->get(),
-            $file->getClientOriginalName()
-        )
-        ->post('https://api.sightengine.com/1.0/check.json', $params);
-
-        $data = $response->json();
-
-        if ($data['status'] != 'success') {
-            throw new \Exception('Sightengine API error: ' . $data['error']['message']);
-        }
-
-        return $data['nudity']['sexual_display'] > 0.5;
     }
 
     protected function hashFile(string $path): string
