@@ -72,6 +72,11 @@ class FileComment extends BaseModel
         return $this->getDisk()->readStream($this->path);
     }
 
+    public function get(): mixed
+    {
+        return $this->getDisk()->get($this->path);
+    }
+
     protected function getDiskName(): string
     {
         return $this->disk;

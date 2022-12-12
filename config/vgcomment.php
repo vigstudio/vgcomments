@@ -100,4 +100,15 @@ return [
     'user_column_name' => 'name',
     'user_column_email' => 'email',
     'user_column_url' => 'url',
+
+    /**
+     * nsfw : Not Safe For Work
+     * Allow users to mark their comments as NSFW
+     * Api form sightengine.com
+     */
+    'nsfw' => false,
+    'nsfw_api' => [
+        'user' => '',
+        'key' => '',
+    ],
 ];
