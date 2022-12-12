@@ -1,0 +1,58 @@
+{
+    "name": "vigstudio/vgcomments",
+    "description": "Comments package for applications. Using this package, you can create and associate comments with Eloquent models.",
+    "keywords": [
+        "vigstudio",
+        "vgcomment"
+    ],
+    "homepage": "https://github.com/vigstudio/vgcomment",
+    "license": "MIT",
+    "type": "laravel-library",
+    "version": "1.0.0",
+    "authors": [
+        {
+            "name": "Viet Nghia",
+            "email": "vingadev@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "illuminate/support": "^9.0",
+        "s9e/text-formatter": "^2.12.0",
+        "laravolt/avatar": "^4.1.7",
+        "intervention/image": "^2.7.2",
+        "nickurt/laravel-stopforumspam": "^1.7.1"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.0",
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vigstudio\\VgComment\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Vigstudio\\VgComment\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Vigstudio\\VgComment\\Providers\\VgCommentServiceProvider"
+            ],
+            "aliases": {
+                "CommentFormatter": "Vigstudio\\VgComment\\Facades\\FormatterFacade"
+            }
+        }
+    }
+}
