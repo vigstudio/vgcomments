@@ -11,6 +11,7 @@ use Vigstudio\VgComment\Services\GetAuthenticatableService;
 use Vigstudio\VgComment\Facades\MacroableFacades;
 use Vigstudio\VgComment\Policies\CommentPolicy;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Auth;
 
 class VgCommentServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,8 @@ class VgCommentServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations', 'vgcomment');
 
         $this->mergeConfigFrom(__DIR__ . '/../../config/vgcomment.php', 'vgcomment');
+
+        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'vgcomment');
 
         $this->loadRoutesFrom(__DIR__ . '/../../routes/routes.php');
 
@@ -104,6 +107,17 @@ class VgCommentServiceProvider extends ServiceProvider
     protected function registerGates()
     {
         Gate::policy(Comment::class, CommentPolicy::class);
+
+        $moderationUsers = Config::get('vgcomment.moderation_users');
+        Gate::define('vgcomment-moderate', function ($user) use ($moderationUsers) {
+            foreach ($moderationUsers as $moderationUser) {
+                if (Auth::guard($moderationUser[0])->check()) {
+                    return $user->id == $moderationUser[1];
+                }
+            }
+
+            return false;
+        });
     }
 
     public function provides(): array

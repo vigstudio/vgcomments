@@ -43,6 +43,9 @@ trait CommentValidator
             if ($this->hasDupicate($request->all())) {
                 $validator->errors()->add('content', trans('vgcomment::validation.errors.content_duplicate'));
             }
+            if ($this->config['recaptcha']) {
+                $this->validateReCaptcha($request, $validator);
+            }
         });
 
         return $validator;
@@ -98,8 +101,8 @@ trait CommentValidator
         )->after(function ($validator) use ($request) {
             if ($this->config['nsfw']) {
                 foreach ($request['files'] as $file) {
-                    $isNswf = Str::before($file->getMimeType(), '/') == 'image' ? $this->checkNswf($file) : false;
-                    if ($isNswf) {
+                    $checkNsfw= Str::before($file->getMimeType(), '/') == 'image' ? $this->checkNsfw($file) : false;
+                    if ($checkNsfw) {
                         $validator->errors()->add('content', trans('vgcomment::validation.errors.nsfw'));
                     }
                 }
@@ -116,7 +119,7 @@ trait CommentValidator
         return $this->config['duplicates_check'] ? $hasDupicate : false;
     }
 
-    protected function checkNswf(mixed $file)
+    protected function checkNsfw(mixed $file)
     {
         $params = [
             'models' => 'nudity-2.0',
@@ -137,6 +140,36 @@ trait CommentValidator
             throw new \Exception('Sightengine API error: ' . $data['error']['message']);
         }
 
-        return $data['nudity']['sexual_display'] > 0.5;
+        return $data['nudity']['sexual_activity'] > 0.3 || $data['nudity']['sexual_display'] > 0.3;
+    }
+
+    protected function validateReCaptcha(Request $request, ValidationIlluminate $validator)
+    {
+        $token = $request->input('recaptcha_token');
+
+        if (empty($token)) {
+            $validator->errors()->add('content', 'reCaptcha token is required');
+
+            return false;
+        }
+
+        $captcha = $this->checkReCaptcha($token);
+
+        if ($captcha) {
+            $validator->errors()->add('content', 'reCaptcha score is too low');
+        }
+
+        return $captcha;
+    }
+
+    protected function checkReCaptcha(string $token)
+    {
+        $response = Http::post('https://www.google.com/recaptcha/api/siteverify?secret=' . $this->config['recaptcha_secret'] . '&response=' . $token);
+        if ($response->json()['success'] == false) {
+            throw new \Exception('reCaptcha API error: ' . $response->json()['error-codes'][0]);
+        }
+        $captcha = $response->json()['score'];
+
+        return $captcha > 0.5;
     }
 }

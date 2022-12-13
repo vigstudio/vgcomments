@@ -14,7 +14,6 @@ use Vigstudio\VgComment\Repositories\Interface\FileInterface;
 use Vigstudio\VgComment\Repositories\Interface\ReactionInterface;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Vigstudio\VgComment\Services\GetAuthenticatableService;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 class CommentService
@@ -62,6 +61,15 @@ class CommentService
     {
         $comments = $this->commentRepository
                         ->getComments($req)
+                        ->paginate($perPage = 10, $columns = ['*'], $pageName = 'vgcomment_page');
+
+        return CommentResource::collection($comments);
+    }
+
+    public function getAdmin(array $req = []): JsonResource
+    {
+        $comments = $this->commentRepository
+                        ->getCommentsAdmin($req)
                         ->paginate($perPage = 10, $columns = ['*'], $pageName = 'vgcomment_page');
 
         return CommentResource::collection($comments);

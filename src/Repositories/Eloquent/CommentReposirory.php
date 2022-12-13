@@ -82,6 +82,15 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
         return $query->orderBy('created_at', 'desc');
     }
 
+    public function getCommentsAdmin(array $req): Builder
+    {
+        $request = $this->makeRequest($req);
+
+        $query = $this->query()->with($this->withRelations());
+
+        return $query->orderBy('created_at', 'desc');
+    }
+
     public function hasDupicate(array $request): bool
     {
         $auth = $this->getAuth();

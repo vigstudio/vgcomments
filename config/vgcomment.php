@@ -16,7 +16,7 @@ return [
         'files' => 'vgcomment_files',
         'reactions' => 'vgcomment_reactions',
         // 'reports' => 'vgcomment_reports',
-        // 'settings' => 'vgcomment_settings',
+        'settings' => 'vgcomment_settings',
     ],
 
     /*
@@ -50,6 +50,14 @@ return [
      * Comments must be moderated before being published
      */
     'moderation' => false,
+
+    /**
+     * Users who can bypass the moderation queue
+     * ['web', 1] : web is the guard, 1 is the user id
+     */
+    'moderation_users' => [
+        ['web', 1],
+    ],
 
     /**
      * When a comment contains one of the words declared in the array
@@ -102,8 +110,8 @@ return [
     'user_column_url' => 'url',
 
     /**
-     * nsfw : Not Safe For Work
-     * Allow users to mark their comments as NSFW
+     * Not Safe For Work
+     * Block NSFW
      * Api form sightengine.com
      */
     'nsfw' => false,
@@ -111,4 +119,12 @@ return [
         'user' => '',
         'key' => '',
     ],
+
+    /**
+     * reCAPTCHA
+     * Api form https://www.google.com/recaptcha
+     */
+    'recaptcha' => false,
+    'recaptcha_key' => env('RECAPTCHA_KEY', ''),
+    'recaptcha_secret' => env('RECAPTCHA_SECRET', ''),
 ];

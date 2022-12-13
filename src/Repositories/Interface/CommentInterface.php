@@ -11,5 +11,7 @@ interface CommentInterface extends EloquentInterface
 
     public function getComments(array $request): Builder;
 
+    public function getCommentsAdmin(array $req): Builder;
+
     public function hasDupicate(array $request): bool;
 }
