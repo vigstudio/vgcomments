@@ -5,16 +5,14 @@ Comments package for applications. Using this package, you can create and associ
 [![Total Downloads](https://img.shields.io/packagist/dt/vigstudio/vgcomments.svg?style=flat-square)](https://packagist.org/packages/vigstudio/vgcomments)
 
 ## _Features_
-- [✓] Add comments to any model
-- [✓] Multiple comment systems on the same page
-- [✓] Multiple auth guards
-- [✓] Drag and drop, copy and paste upload files
-- [✓] reCaptcha v3 support
-- [✓] Emoji support
-- [✓] Markdown support
-- [✓] NSFW check support
-- [x] Mention support
-- [x] Admin Settings Panel
+- [x] Add comments to any model
+- [x] Multiple comment systems on the same page
+- [x] Multiple auth guards
+- [x] Drag and drop, copy and paste upload files
+- [x] reCaptcha v3 support
+- [x] Emoji support
+- [x] Markdown support
+- [x] NSFW image upload check support
 
 ## _Packages_
 - [s9e/TextFormatter](https://github.com/s9e/TextFormatter)
