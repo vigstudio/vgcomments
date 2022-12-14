@@ -109,6 +109,7 @@ class VgCommentServiceProvider extends ServiceProvider
         Gate::policy(Comment::class, CommentPolicy::class);
 
         $moderationUsers = Config::get('vgcomment.moderation_users');
+
         Gate::define('vgcomment-moderate', function ($user) use ($moderationUsers) {
             foreach ($moderationUsers as $moderationUser) {
                 if (Auth::guard($moderationUser[0])->check()) {

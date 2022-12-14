@@ -148,28 +148,34 @@ trait CommentValidator
         $token = $request->input('recaptcha_token');
 
         if (empty($token)) {
-            $validator->errors()->add('content', 'reCaptcha token is required');
+            $validator->errors()->add('content', trans('vgcomment::validation.errors.recaptcha_error'));
 
             return false;
         }
 
-        $captcha = $this->checkReCaptcha($token);
+        $captcha = $this->checkReCaptcha($request);
 
-        if ($captcha) {
-            $validator->errors()->add('content', 'reCaptcha score is too low');
+        if (! $captcha) {
+            $validator->errors()->add('content', trans('vgcomment::validation.errors.recaptcha_is_bot'));
+
+            return false;
         }
-
-        return $captcha;
     }
 
-    protected function checkReCaptcha(string $token)
+    protected function checkReCaptcha(Request $request)
     {
-        $response = Http::post('https://www.google.com/recaptcha/api/siteverify?secret=' . $this->config['recaptcha_secret'] . '&response=' . $token);
-        if ($response->json()['success'] == false) {
-            throw new \Exception('reCaptcha API error: ' . $response->json()['error-codes'][0]);
-        }
-        $captcha = $response->json()['score'];
+        $response = Http::post('https://www.google.com/recaptcha/api/siteverify?secret=' . $this->config['recaptcha_secret'] . '&response=' . $request->input('recaptcha_token') . '&remoteip=' . $request->getClientIp());
 
-        return $captcha > 0.5;
+        if ($response->status() !== 200) {
+            return true;
+        }
+
+        if ($response->json()['success']) {
+            $score = $response->json()['score'];
+
+            return $score >= 0.5;
+        }
+
+        return true;
     }
 }

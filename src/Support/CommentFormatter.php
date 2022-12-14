@@ -98,7 +98,13 @@ class CommentFormatter implements CommentFormatterInterface
         $this->configurator->Autoimage;
 
         //Auto link
+        $urlTag = $this->configurator->tags->add('URL');
+        $filterUrlTag = $this->configurator->attributeFilters->get('#url');
+        $urlTag->attributes->add('url')->filterChain->append($filterUrlTag);
+        $urlTag->template = '<a target="_blank" href="{@url}"><xsl:apply-templates/></a>';
+
         $this->configurator->Autolink;
+        $this->configurator->Autolink->matchWww = true;
         $this->configurator->urlConfig->allowScheme('ftp');
         $this->configurator->urlConfig->allowScheme('irc');
 
