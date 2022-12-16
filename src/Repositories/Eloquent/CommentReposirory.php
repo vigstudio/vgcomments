@@ -38,7 +38,7 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
         }
 
         try {
-            $comment = $this->create($this->mergeRequest($request));
+            $comment = $this->create($this->protectedRequest($request));
 
             $comment->status = $this->moderator->determineStatus($comment);
             $comment->save();
@@ -143,7 +143,7 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
         return ! is_null($model->find($id, [$model->getKeyName()]));
     }
 
-    protected function mergeRequest(Request $request): array
+    protected function protectedRequest(Request $request): array
     {
         $auth = $this->getAuth();
 
@@ -152,14 +152,11 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
         $url = ! empty($this->config['user_column_url']) ? $this->config['user_column_url'] : 'url';
 
         $mergeRequest = [
-            'author_ip' => $request->server('REMOTE_ADDR'),
-            'user_agent' => $request->server('HTTP_USER_AGENT'),
             'responder_type' => $auth ? get_class($auth) : null,
             'responder_id' => $auth ? $auth->getKey() : null,
             'author_name' => $auth ? $auth->$name : $request->author_name,
             'author_email' => $auth ? $auth->$email : $request->author_email,
             'author_url' => $auth ? $auth->$url : $request->author_url,
-            'permalink' => $request->server('HTTP_REFERER'),
         ];
 
         $input = $request->merge($mergeRequest)->only([

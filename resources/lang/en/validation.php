@@ -15,4 +15,5 @@ return [
         'recaptcha_error' => 'Recaptcha error',
         'recaptcha_is_bot' => 'Forbiden automation',
     ],
+
 ];

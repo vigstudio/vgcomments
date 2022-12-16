@@ -2,3 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+.table-admin {
+    @apply table-fixed w-full divide-y divide-gray-300;
+
+    thead {
+        @apply bg-gray-50;
+        tr {
+            th {
+                @apply px-3 py-3.5 text-left text-sm font-semibold text-gray-900;
+            }
+        }
+    }
+
+    tbody {
+        @apply divide-y divide-gray-200 bg-white;
+        tr {
+            th {
+                @apply px-3 py-4 text-sm font-bold text-gray-700;
+            }
+
+            td {
+                @apply px-3 py-4 text-sm break-words text-gray-500;
+            }
+        }
+    }
+}
+
+.btn {
+    @apply text-gray-900 bg-white hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-2 py-2 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 mr-2 mb-2;
+}

@@ -98,7 +98,8 @@ class CommentService
      */
     public function store(array $req): Comment|bool
     {
-        $comment = $this->commentRepository->store($req);
+        $request = $this->mergeRequest($this->request->merge($req));
+        $comment = $this->commentRepository->store($request);
 
         return $comment;
     }
@@ -186,5 +187,29 @@ class CommentService
         $comment = $this->commentRepository->findByUuid($uuid);
 
         return $this->getAuth()->react($comment, $type);
+    }
+
+    protected function mergeRequest(Request $request): array
+    {
+        $auth = $this->getAuth();
+
+        $name = ! empty($this->config['user_column_name']) ? $this->config['user_column_name'] : 'name';
+        $email = ! empty($this->config['user_column_email']) ? $this->config['user_column_email'] : 'email';
+        $url = ! empty($this->config['user_column_url']) ? $this->config['user_column_url'] : 'url';
+
+        $mergeRequest = [
+            'author_ip' => $request->server('REMOTE_ADDR'),
+            'user_agent' => $request->server('HTTP_USER_AGENT'),
+            'responder_type' => $auth ? get_class($auth) : null,
+            'responder_id' => $auth ? $auth->getKey() : null,
+            'author_name' => $auth ? $auth->$name : $request->author_name,
+            'author_email' => $auth ? $auth->$email : $request->author_email,
+            'author_url' => $auth ? $auth->$url : $request->author_url,
+            'permalink' => $request->server('HTTP_REFERER'),
+        ];
+
+        $input = $request->merge($mergeRequest);
+
+        return $input->all();
     }
 }

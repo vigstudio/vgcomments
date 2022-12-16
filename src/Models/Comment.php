@@ -111,6 +111,11 @@ class Comment extends BaseModel
         return $this->permalink . '#vgcomment-' . $this->uuid;
     }
 
+    public function getStatusNameAttribute()
+    {
+        return trans('vgcomment::comment.status.' . $this->status);
+    }
+
     public function approved()
     {
         return $this->status === self::STATUS_APPROVED;

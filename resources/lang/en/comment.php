@@ -14,7 +14,10 @@ return [
     'cancel' => 'Cancel',
     'placeholder_textarea' => 'Add your comment...',
     'uploading' => 'Uploading....',
-    'markdown_support' => 'Markdown is supported.',
-    'paste_drop_support' => 'Attach files by dragging & dropping, selecting or pasting them.',
-
+    'status' => [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'spam' => 'Spam',
+        'trash' => 'Trash',
+    ],
 ];
