@@ -78,10 +78,8 @@ return [
     | per_minutes: Allow users to access a given request :max_rate times :per_minutes
     |
     */
-    'throttle' => [
-        'max_rate' => 10,
-        'per_minutes' => 1,
-    ],
+    'throttle_max_rate' => 10,
+    'throttle_per_minutes' => 1,
 
     /*
     |--------------------------------------------------------------------------
@@ -99,11 +97,15 @@ return [
     |--------------------------------------------------------------------------
     |
     | This is the setting for users manager comments.
-    | ['web', 1] : web is the guard, 1 is the user id
+    | 'guard' => [user_id]
+    |
+    | Example:
+    | 'web' => [1, 2, 3]
+    | 'api' => [1, 2, 3]
     |
     */
     'moderation_users' => [
-        ['web', 1],
+        'web' => [1],
     ],
 
     /*
@@ -197,14 +199,12 @@ return [
     |--------------------------------------------------------------------------
     |
     | This is the setting for upload rules.
-    | "rules"   : Rules for upload
-    | "max"     : Maximum number of files to upload
+    | "upload_rules"            : Rules for upload
+    | "upload_rules_max"        : Maximum number of files to upload
     |
     */
-    'upload_rules' => [
-        'rules' => ['max:5120', 'mimes:doc,pdf,jpg,png,jpge,gif'],
-        'max' => 5,
-    ],
+    'upload_rules' => ['max:5120', 'mimes:doc,pdf,jpg,png,jpge,gif'],
+    'upload_rules_max' => 5,
 
     /*
     |--------------------------------------------------------------------------
@@ -234,10 +234,8 @@ return [
     |
     */
     'nsfw' => false,
-    'nsfw_api' => [
-        'user' => '',
-        'key' => '',
-    ],
+    'nsfw_api_user' => '',
+    'nsfw_api_key' => '',
 
     /*
     |--------------------------------------------------------------------------

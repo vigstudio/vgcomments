@@ -5,6 +5,9 @@ namespace Vigstudio\VgComment\Http\Controllers;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Vigstudio\VgComment\Facades\CommentServiceFacade;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Arr;
+use Vigstudio\VgComment\Repositories\Interface\SettingInterface;
 
 class AdminController extends Controller
 {
@@ -17,11 +20,15 @@ class AdminController extends Controller
 
     public function setting()
     {
-        return view('vgcomment::setting');
+        $config = Arr::except(Config::get('vgcomment'), ['table', 'connection', 'moderation_users']);
+
+        return view('vgcomment::setting', compact('config'));
     }
 
-    protected function configKey()
+    public function updateSetting(Request $request, SettingInterface $settingRepository)
     {
-        return view('vgcomment::config-key');
+        $settingRepository->set($request);
+
+        return back()->with('success', 'Update success');
     }
 }

@@ -7,17 +7,17 @@ use Illuminate\Support\Facades\RateLimiter;
 use Vigstudio\VgComment\Services\GetAuthenticatableService;
 use Illuminate\Contracts\Auth\Authenticatable;
 
-
 trait ThrottlesPosts
 {
     protected function tooManyAttempts(Request $request): bool
     {
-        $throttle = config('vgcomment.throttle');
+        $max_rate = config('vgcomment.throttle_max_rate');
+        $per_minutes = config('vgcomment.throttle_per_minutes');
 
         return RateLimiter::tooManyAttempts(
             $this->key($request),
-            $throttle['max_rate'],
-            $throttle['per_minutes']
+            $max_rate,
+            $per_minutes
         );
     }
 

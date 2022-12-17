@@ -11,6 +11,7 @@ Route::group([
     Route::group(['prefix' => 'admin'], function () {
         Route::get('/', 'AdminController@dashboard')->name('vgcomments.admin.dashboard');
         Route::get('setting', 'AdminController@setting')->name('vgcomments.admin.setting');
+        Route::post('setting', 'AdminController@updateSetting')->name('vgcomments.admin.setting');
     });
 
     Route::group(['prefix' => 'files'], function () {

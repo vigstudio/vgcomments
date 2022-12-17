@@ -115,6 +115,7 @@
 <script>
     window.prefix = "/{{ config('vgcomment.prefix') }}/admin";
 </script>
+<script src="//unpkg.com/alpinejs" defer></script>
 <script src="{{ asset('vendor/vgcomments/js/app.js') }}"></script>
 
 </html>

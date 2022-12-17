@@ -31,3 +31,11 @@
 .btn {
     @apply text-gray-900 bg-white hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-2 py-2 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 mr-2 mb-2;
 }
+
+.btn-danger {
+    @apply text-white bg-red-600 hover:bg-red-400 focus:ring-4 focus:outline-none focus:bg-red-800 font-medium rounded-lg text-sm px-2 py-2 text-center inline-flex items-center dark:bg-red-600 dark:focus:bg-red-200 mr-2 mb-2;
+}
+
+.btn-orange {
+    @apply text-white bg-[#FF9119] hover:bg-[#FF9119]/80 focus:ring-4 focus:outline-none focus:ring-[#FF9119]/50 font-medium rounded-lg text-sm px-2 py-2 text-center inline-flex items-center dark:hover:bg-[#FF9119]/80 dark:focus:ring-[#FF9119]/40 mr-2 mb-2;
+}

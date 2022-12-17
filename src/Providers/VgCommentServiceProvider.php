@@ -12,6 +12,7 @@ use Vigstudio\VgComment\Facades\MacroableFacades;
 use Vigstudio\VgComment\Policies\CommentPolicy;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
+use Vigstudio\VgComment\Repositories\Interface\SettingInterface;
 
 class VgCommentServiceProvider extends ServiceProvider
 {
@@ -35,6 +36,7 @@ class VgCommentServiceProvider extends ServiceProvider
         }
 
         $this->bootMacros();
+        $this->bootConfig();
     }
 
     public function register()
@@ -111,14 +113,22 @@ class VgCommentServiceProvider extends ServiceProvider
         $moderationUsers = Config::get('vgcomment.moderation_users');
 
         Gate::define('vgcomment-moderate', function ($user) use ($moderationUsers) {
-            foreach ($moderationUsers as $moderationUser) {
-                if (Auth::guard($moderationUser[0])->check()) {
-                    return $user->id == $moderationUser[1];
+            foreach ($moderationUsers as $key => $moderationUser) {
+                if (Auth::guard($key)->check()) {
+                    return $user->id == $moderationUser;
                 }
             }
 
             return false;
         });
+    }
+
+    protected function bootConfig()
+    {
+        $settings = app(SettingInterface::class)->all();
+        foreach ($settings as $setting) {
+            Config::set('vgcomment.' . $setting->key, $setting->value);
+        }
     }
 
     public function provides(): array

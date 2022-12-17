@@ -82,8 +82,8 @@ trait CommentValidator
 
     protected function uploadValidator(Request $request): ValidationIlluminate
     {
-        $rule = $this->config['upload_rules']['rules'];
-        $max = $this->config['upload_rules']['max'];
+        $rule = $this->config['upload_rules'];
+        $max = $this->config['upload_rules_max'];
 
         $validator = Validator::make(
             $request->all(),
@@ -123,8 +123,8 @@ trait CommentValidator
     {
         $params = [
             'models' => 'nudity-2.0',
-            'api_user' => $this->config['nsfw_api']['user'],
-            'api_secret' => $this->config['nsfw_api']['key'],
+            'api_user' => $this->config['nsfw_api_user'],
+            'api_secret' => $this->config['nsfw_api_key'],
         ];
 
         $response = Http::attach(

@@ -6,7 +6,7 @@
         </div>
     </header>
     <main>
-        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-7xl sm:px-2 lg:px-3" x-data>
             <!-- Replace with your content -->
             <div class="px-4 py-8 sm:px-0" id="app">
                 <div class="px-4 sm:px-6 lg:px-8">
@@ -27,6 +27,7 @@
                                                 <th>{{ __('vgcomment::admin.author_ip') }}</th>
                                                 <th>{{ __('vgcomment::admin.user_agent') }}</th>
                                                 <th>{{ __('vgcomment::admin.content') }}</th>
+                                                <th>{{ __('vgcomment::admin.url') }}</th>
                                                 <th>{{ __('vgcomment::admin.status') }}</th>
                                                 <th></th>
                                             </tr>
@@ -39,6 +40,9 @@
                                                     <td>{{ $comment->author_ip }}</td>
                                                     <td>{{ $comment->user_agent }}</td>
                                                     <td>{{ $comment->content }}</td>
+                                                    <td>
+                                                        <a href="{{ $comment->url }}" target="_blank" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">{{ $comment->url }}</a>
+                                                    </td>
                                                     <td>{{ $comment->status_name }}</td>
                                                     <td>
                                                         <button type="button" class="btn">
@@ -48,7 +52,7 @@
                                                             </svg>
                                                         </button>
 
-                                                        <button type="button" class="btn">
+                                                        <button type="button" class="btn-orange">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 p-1">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                                                             </svg>
@@ -56,7 +60,7 @@
                                                         </button>
 
 
-                                                        <button type="button" class="btn">
+                                                        <button type="button" class="btn-danger">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 p-1">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                                                             </svg>
@@ -74,7 +78,6 @@
                             </div>
                         </div>
                     </div>
-
 
                 </div>
             </div>

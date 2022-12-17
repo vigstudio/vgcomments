@@ -14,6 +14,8 @@ abstract class EloquentReposirory implements EloquentInterface
 
     protected array $config;
 
+    protected CacheInterface $cache;
+
     protected ModeratorInterface $moderator;
 
     public function __construct(Model $model, array $config, ModeratorInterface $moderator)
@@ -26,6 +28,11 @@ abstract class EloquentReposirory implements EloquentInterface
     protected function query(): Builder
     {
         return $this->model->newQuery();
+    }
+
+    public function all(): mixed
+    {
+        return $this->query()->get();
     }
 
     public function findByUuid(string $uuid): mixed
@@ -51,6 +58,11 @@ abstract class EloquentReposirory implements EloquentInterface
     public function delete(int $id): bool
     {
         return $this->find($id)->delete();
+    }
+
+    public function updateOrCreate(array $attributes, array $values = []): mixed
+    {
+        return $this->query()->updateOrCreate($attributes, $values);
     }
 
     protected function makeRequest(array $request): Request

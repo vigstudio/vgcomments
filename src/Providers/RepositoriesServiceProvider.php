@@ -7,13 +7,16 @@ use Illuminate\Support\ServiceProvider;
 use Vigstudio\VgComment\Models\Comment;
 use Vigstudio\VgComment\Models\FileComment;
 use Vigstudio\VgComment\Models\Reaction;
+use Vigstudio\VgComment\Models\Setting;
 use Vigstudio\VgComment\Repositories\ContractsInterface\ModeratorInterface;
 use Vigstudio\VgComment\Repositories\Eloquent\CommentReposirory;
 use Vigstudio\VgComment\Repositories\Eloquent\FileReposirory;
 use Vigstudio\VgComment\Repositories\Eloquent\ReactionReposirory;
+use Vigstudio\VgComment\Repositories\Eloquent\SettingReposirory;
 use Vigstudio\VgComment\Repositories\Interface\CommentInterface;
 use Vigstudio\VgComment\Repositories\Interface\FileInterface;
 use Vigstudio\VgComment\Repositories\Interface\ReactionInterface;
+use Vigstudio\VgComment\Repositories\Interface\SettingInterface;
 
 class RepositoriesServiceProvider extends ServiceProvider
 {
@@ -27,6 +30,9 @@ class RepositoriesServiceProvider extends ServiceProvider
         });
         $this->app->bind(ReactionInterface::class, function () {
             return new ReactionReposirory(new Reaction(), Config::get('vgcomment'), app(ModeratorInterface::class));
+        });
+        $this->app->bind(SettingInterface::class, function () {
+            return new SettingReposirory(new Setting(), Config::get('vgcomment'), app(ModeratorInterface::class));
         });
     }
 }
