@@ -152,9 +152,10 @@ class VgCommentServiceProvider extends ServiceProvider
     protected function bootConfig()
     {
         if (Schema::hasTable(Config::get('vgcomment.table.settings'))) {
-            $settings = app(SettingInterface::class)->all();
-            foreach ($settings as $setting) {
-                Config::set('vgcomment.' . $setting->key, $setting->value);
+            $settings = app(SettingInterface::class)->getAll();
+
+            foreach ($settings as $key => $value) {
+                Config::set('vgcomment.' . $key, $value);
             }
         }
     }

@@ -11,6 +11,15 @@ use Illuminate\Contracts\Cache\Repository as CacheInterface;
 
 class SettingReposirory extends EloquentReposirory implements SettingInterface
 {
+    public function getAll(): array
+    {
+        foreach ($this->all() as $config) {
+            $this->config[$config->key] = $this->get($config->key);
+        }
+
+        return $this->config;
+    }
+
     public function set(Request $request): Collection
     {
         $only_key = collect($this->config)->keys()->toArray();
@@ -19,10 +28,8 @@ class SettingReposirory extends EloquentReposirory implements SettingInterface
 
         foreach ($inputs as $key => $value) {
             $parseValue = $this->parseBoolean($value);
-
             $this->updateOrCreate(['key' => $key], ['value' => $parseValue]);
             $this->forgetCache($key);
-            $this->rememberCache($key, $parseValue);
         }
 
         FormatterFacade::flush();
@@ -56,7 +63,7 @@ class SettingReposirory extends EloquentReposirory implements SettingInterface
         return $this->query()->where('key', $key)->delete();
     }
 
-    protected function parseBoolean(string|array|bool $value): mixed
+    protected function parseBoolean(mixed $value): mixed
     {
         if ($value === 'true' || $value === 'false') {
             return filter_var($value, FILTER_VALIDATE_BOOLEAN);
@@ -65,12 +72,12 @@ class SettingReposirory extends EloquentReposirory implements SettingInterface
         return $value;
     }
 
-    protected function getCache(string $key): string|array
+    protected function getCache(string $key): mixed
     {
         return app(CacheInterface::class)->get($this->key($key));
     }
 
-    protected function rememberCache(string $key, string|array|bool $value): mixed
+    protected function rememberCache(string $key, mixed $value): mixed
     {
         return app(CacheInterface::class)->rememberForever($this->key($key), function () use ($value) {
             return $value;
@@ -79,7 +86,7 @@ class SettingReposirory extends EloquentReposirory implements SettingInterface
 
     protected function forgetCache(string $key): bool
     {
-        return app(CacheInterface::class)->forget($key);
+        return app(CacheInterface::class)->forget($this->key($key));
     }
 
     protected function key(string $key): string
