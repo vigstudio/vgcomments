@@ -189,6 +189,29 @@ class CommentService
         return $this->getAuth()->react($comment, $type);
     }
 
+    /**
+     * Service to report comment
+     * Author by Vigstudio
+     *
+     * @param $uuid
+     * @return bool
+     */
+    public function report(string $uuid)
+    {
+        $comment = $this->commentRepository->findByUuid($uuid);
+
+        $this->getAuth()->report($comment);
+
+        $status = $this->config['report_status'];
+        $maxReports = $this->config['max_reports'];
+
+        if ($maxReports && $comment->reports()->count() >= $maxReports) {
+            $comment->update(['status' => $status]);
+        }
+
+        return true;
+    }
+
     protected function mergeRequest(Request $request): array
     {
         $auth = $this->getAuth();

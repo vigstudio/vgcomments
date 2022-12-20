@@ -71,6 +71,11 @@ class Comment extends BaseModel
         return $this->hasMany(Reaction::class, 'comment_id');
     }
 
+    public function reports()
+    {
+        return $this->hasMany(Report::class, 'comment_id');
+    }
+
     public function files()
     {
         return $this->hasMany(FileComment::class, 'comment_id');

@@ -8,10 +8,12 @@ return [
     'preview' => 'Preview',
     'reply' => 'Reply',
     'edit' => 'Edit',
-    'remove' => 'Remove',
+    'delete' => 'Delete',
     'report' => 'Report',
     'submit' => 'Submit',
     'cancel' => 'Cancel',
+    'delete_confirm' => 'Do you want to delete this comment?',
+    'report_confirm' => 'Do you want to report this comment?',
     'placeholder_textarea' => 'Add your comment...',
     'uploading' => 'Uploading....',
     'status' => [

@@ -7,11 +7,13 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Vigstudio\VgComment\Models\Comment;
 use Vigstudio\VgComment\Models\Reaction;
+use Vigstudio\VgComment\Models\Report;
 use Vigstudio\VgComment\Services\GetAuthenticatableService;
 use Vigstudio\VgComment\Facades\MacroableFacades;
 use Vigstudio\VgComment\Policies\CommentPolicy;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Vigstudio\VgComment\Repositories\Interface\SettingInterface;
 
 class VgCommentServiceProvider extends ServiceProvider
@@ -87,6 +89,23 @@ class VgCommentServiceProvider extends ServiceProvider
                     'type' => $type,
                 ]);
             });
+
+            $authModel::resolveRelationUsing('reports', function ($model) {
+                return $model->morphMany(Report::class, 'reporter');
+            });
+
+            MacroableFacades::addMacro($authModel, 'report', function (Comment $comment) {
+                $report = $this->reports()->where('comment_uuid', $comment->getUuid())->first();
+
+                if (! $report) {
+                    return $this->reports()->create([
+                        'comment_id' => $comment->getKey(),
+                        'comment_uuid' => $comment->getUuid(),
+                    ]);
+                }
+
+                return $report;
+            });
         }
     }
 
@@ -112,22 +131,31 @@ class VgCommentServiceProvider extends ServiceProvider
 
         $moderationUsers = Config::get('vgcomment.moderation_users');
 
+        if ($moderationUsers == null) {
+            $moderationUsers = [];
+        }
+
         Gate::define('vgcomment-moderate', function ($user) use ($moderationUsers) {
             foreach ($moderationUsers as $key => $moderationUser) {
                 if (Auth::guard($key)->check()) {
-                    return $user->id == $moderationUser;
+                    return in_array($user->id, $moderationUser);
                 }
             }
 
             return false;
         });
+
+        $router = $this->app['router'];
+        $router->aliasMiddleware('vgcomment-moderate', \Vigstudio\VgComment\Http\Middleware\ModerationUser::class);
     }
 
     protected function bootConfig()
     {
-        $settings = app(SettingInterface::class)->all();
-        foreach ($settings as $setting) {
-            Config::set('vgcomment.' . $setting->key, $setting->value);
+        if (Schema::hasTable(Config::get('vgcomment.table.settings'))) {
+            $settings = app(SettingInterface::class)->all();
+            foreach ($settings as $setting) {
+                Config::set('vgcomment.' . $setting->key, $setting->value);
+            }
         }
     }
 

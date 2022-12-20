@@ -30,7 +30,7 @@ return [
         'comments' => 'vgcomments',
         'files' => 'vgcomment_files',
         'reactions' => 'vgcomment_reactions',
-        // 'reports' => 'vgcomment_reports',
+        'reports' => 'vgcomment_reports',
         'settings' => 'vgcomment_settings',
     ],
 
@@ -177,6 +177,19 @@ return [
     |
     */
     'duplicates_check' => false,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Report Comments's content
+    |--------------------------------------------------------------------------
+    |
+    | This is the setting for report comments's content.
+    | report_status: The status after the comment has to many reports: "pending" or "spam".
+    | max_reports: The maximum number of reports before the comment is marked as "report_status".
+    |
+    */
+    'report_status' => 'pending',
+    'max_reports' => 5,
 
     /*
     |--------------------------------------------------------------------------

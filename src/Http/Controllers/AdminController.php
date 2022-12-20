@@ -11,6 +11,11 @@ use Vigstudio\VgComment\Repositories\Interface\SettingInterface;
 
 class AdminController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('vgcomment-moderate');
+    }
+
     public function dashboard(Request $request)
     {
         $comments = CommentServiceFacade::getAdmin($request->all());

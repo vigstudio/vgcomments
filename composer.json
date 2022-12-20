@@ -8,7 +8,7 @@
     "homepage": "https://github.com/vigstudio/vgcomment",
     "license": "MIT",
     "type": "laravel-library",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "authors": [
         {
             "name": "Viet Nghia",

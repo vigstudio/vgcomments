@@ -6,16 +6,16 @@
         </div>
     </header>
     <main>
-        <div class="mx-auto max-w-7xl sm:px-2 lg:px-3" x-data>
+        <div class="mx-auto max-w-7xl sm:px-2 lg:px-3">
             <!-- Replace with your content -->
             {{-- @dd($config) --}}
             <div class="px-4 sm:px-6 lg:px-8">
 
-                <form action="" method="post">
+                <form action="{{ route('vgcomments.admin.setting.post') }}" method="post">
                     @csrf
                     @foreach ($config as $key => $value)
                         <div class="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5 border-t border-gray-200 mt-6">
-                            <label for="last-name" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">{{ $key }}</label>
+                            <label for="last-name" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">{{ trans('vgcomment::admin.' . $key . '_label') }}</label>
                             <div class="mt-1 sm:col-span-2 sm:mt-0">
                                 @if (gettype($value) == 'string')
                                     <x-vgcomment::form.input type="text" name="{{ $key }}" value="{{ $value }}" />
@@ -24,9 +24,23 @@
                                 @elseif(gettype($value) == 'boolean')
                                     <x-vgcomment::form.select name="{{ $key }}" value="{{ $value }}" />
                                 @elseif(gettype($value) == 'array')
-                                    @foreach ($value as $itemKey => $item)
-                                        <x-vgcomment::form.input type="text" name="{{ $key }}[{{ $itemKey }}]" value="{{ $item }}" />
-                                    @endforeach
+                                    <div x-data='{
+                                        items: @json($value),
+                                        pushItem (){
+                                            this.items.push("");
+                                            console.log(this.items);
+                                        }
+                                    }'>
+
+                                        {{-- @foreach ($value as $itemKey => $item)
+                                            <x-vgcomment::form.input type="text" name="{{ $key }}[{{ $itemKey }}]" value="{{ $item }}" />
+                                        @endforeach --}}
+
+                                        <template x-for="(item, key) in items" :key="key">
+                                            <x-vgcomment::form.input type="text" name="{{ $key }}[]" x-bind:value="item" />
+                                        </template>
+                                        <button type="button" x-on:click='pushItem()' class="inline-flex items-center rounded border border-transparent bg-indigo-100 px-2.5 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mt-5">+ Add</button>
+                                    </div>
                                 @endif
                             </div>
                         </div>

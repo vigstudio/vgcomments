@@ -56,6 +56,10 @@ class CommentPolicy
 
     public function report(?Authenticatable $auth, Comment $comment): bool
     {
+        if (! $comment->approved()) {
+            return false;
+        }
+
         return true;
     }
 }
