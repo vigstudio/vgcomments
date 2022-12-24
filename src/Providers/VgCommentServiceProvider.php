@@ -114,6 +114,9 @@ class VgCommentServiceProvider extends ServiceProvider
         // Publishing the config.
         $this->publishes([__DIR__ . '/../../config/vgcomment.php' => config_path('vgcomment.php')], 'vgcomment-config');
 
+        // Publishing the assets.
+        $this->publishes([__DIR__ . '/../public' => public_path('vendor/vgcomments')], 'vgcomment-assets');
+
         // Publishing the translation files.
         $this->publishes([__DIR__ . '/../../resources/lang' => $this->app->langPath('vendor/vgcomment')], 'vgcomment-lang');
     }

@@ -11,6 +11,14 @@
             {{-- @dd($config) --}}
             <div class="px-4 sm:px-6 lg:px-8">
 
+                @if ($errors->any())
+                    @foreach ($errors->all() as $error)
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                            <strong class="font-bold">{{ $error }}</strong>
+                            <span class="block sm:inline">{{ $error }}</span>
+                        </div>
+                    @endforeach
+                @endif
                 <form action="{{ route('vgcomments.admin.setting.post') }}" method="post">
                     @csrf
                     @foreach ($config as $key => $value)
@@ -32,17 +40,18 @@
                                         }
                                     }'>
 
-                                        {{-- @foreach ($value as $itemKey => $item)
-                                            <x-vgcomment::form.input type="text" name="{{ $key }}[{{ $itemKey }}]" value="{{ $item }}" />
-                                        @endforeach --}}
-
-                                        <template x-for="(item, key) in items" :key="key">
+                                        <div x-for="(item, key) in items" :key="key">
                                             <x-vgcomment::form.input type="text" name="{{ $key }}[]" x-bind:value="item" />
-                                        </template>
+                                            <button type="button" :data-key="key" class="inline-flex items-center rounded border border-transparent bg-indigo-100 px-2.5 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mt-5">Remove</button>
+                                        </div>
+
                                         <button type="button" x-on:click='pushItem()' class="inline-flex items-center rounded border border-transparent bg-indigo-100 px-2.5 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mt-5">+ Add</button>
                                     </div>
                                 @endif
+
+                                <p class="mt-2 text-sm text-gray-500">{{ trans('vgcomment::admin.' . $key . '_description') }}</p>
                             </div>
+
                         </div>
                     @endforeach
 

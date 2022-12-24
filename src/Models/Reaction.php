@@ -5,6 +5,7 @@ namespace Vigstudio\VgComment\Models;
 use Illuminate\Database\Eloquent\Relations\hasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Vigstudio\VgComment\Services\GetAuthenticatableService;
+use Vigstudio\VgComment\Events\ReactedCommentEvent;
 
 class Reaction extends BaseModel
 {
@@ -18,6 +19,10 @@ class Reaction extends BaseModel
         'reactable_id',
     ];
 
+    protected $dispatchesEvents = [
+        'created' => ReactedCommentEvent::class,
+    ];
+
     public function reactable(): MorphTo
     {
         return $this->morphTo();
@@ -25,7 +30,7 @@ class Reaction extends BaseModel
 
     public function comment(): hasOne
     {
-        return $this->hasOne(Comment::class, 'comment_id');
+        return $this->hasOne(Comment::class, 'id', 'comment_id');
     }
 
     public function getUserReactedAttribute(): bool

@@ -79,7 +79,19 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
 
         $this->inStatus($query, [Comment::STATUS_APPROVED]);
 
-        return $query->orderBy('created_at', 'desc');
+        $query->when($request->order === 'latest', function ($query) {
+            $query->orderBy('created_at', 'desc');
+        });
+
+        $query->when($request->order === 'oldest', function ($query) {
+            $query->orderBy('created_at', 'asc');
+        });
+
+        $query->when($request->order === 'popular', function ($query) {
+            $query->orderBy('point', 'desc');
+        });
+
+        return $query;
     }
 
     public function getCommentsAdmin(array $req): Builder

@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'discussion' => 'Discussion',
+    'latest' => 'Latest',
+    'popular' => 'Popular',
+    'oldest' => 'Oldest',
     'store_success' => 'Your comment was sent to public',
     'throttle_max_rate' => 'Too many request. Please try again in :seconds seconds !',
     'upload_success' => 'Upload File Success !',

@@ -57,6 +57,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Gravatar Settings Imageset
+    |--------------------------------------------------------------------------
+    |
+    | This is the setting for gravatar imageset.
+    | Set the imageset to use for avatars if no image is associated with the email hash, one of:
+    | '404': do not load any image if none is associated with the email hash, instead return an HTTP 404 (File Not Found) response
+    | 'mp': (mystery-person) a simple, cartoon-style silhouetted outline of a person (does not vary by email hash)
+    | 'identicon': a geometric pattern based on an email hash
+    | 'monsterid': a generated 'monster' with different colors, faces, etc
+    | 'wavatar': generated faces with differing features and backgrounds
+    | 'retro': awesome generated, 8-bit arcade-style pixelated faces
+    | 'robohash': a generated robot with different colors, faces, etc
+    | 'blank': a transparent PNG image (border added to HTML below for demonstration purposes)
+    |
+    */
+    'gravatar' => true,
+    'gravatar_imageset' => 'wavatar',
+
+    /*
+    |--------------------------------------------------------------------------
     | Validation Rules for Comments Content length
     |--------------------------------------------------------------------------
     |
@@ -75,7 +95,7 @@ return [
     |
     | This is the throttle settings for the comments requests.
     | max_rate: The maximum number of comment post attempts for delaying further attempts
-    | per_minutes: Allow users to access a given request :max_rate times :per_minutes
+    | per_minutes: Allow users to access a given request :throttle_max_rate times :throttle_per_minutes
     |
     */
     'throttle_max_rate' => 10,
@@ -138,16 +158,9 @@ return [
     |--------------------------------------------------------------------------
     |
     | This is the setting for censor.
+    | 'censor'      :     Enable or disable the censor
+    | 'censors_text':     Array of words to censor
     |
-    */
-    'censor' => true,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Censor Keys
-    |--------------------------------------------------------------------------
-    |
-    | This is the setting for censor keys.
     | Every key is a word that will be censored.
     | If the comment contains one of the words declared in the array
     | The list is not case-sensitive. If you censor "foo", then "FOO" and "Foo" are also censored.
@@ -156,6 +169,7 @@ return [
     | Censored words are replaced with **** unless a replacement is specified when the censored word is added to the list.
     |
     */
+    'censor' => true,
     'censors_text' => [],
 
     /*
@@ -233,6 +247,7 @@ return [
     'user_column_name' => 'name',
     'user_column_email' => 'email',
     'user_column_url' => 'url',
+    'user_column_avatar_url' => 'avatar_url',
 
     /*
     |--------------------------------------------------------------------------

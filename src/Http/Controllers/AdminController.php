@@ -32,6 +32,44 @@ class AdminController extends Controller
 
     public function updateSetting(Request $request, SettingInterface $settingRepository)
     {
+        // dd($request->all());
+        $request->validate([
+            'prefix' => 'required|string',
+            'allow_guests' => 'required',
+            'gravatar' => 'required',
+            'gravatar_default' => 'required|string',
+            'min_length' => 'required|integer',
+            'max_length' => 'required|integer',
+            'throttle_max_rate' => 'required|integer',
+            'throttle_per_minutes' => 'required|integer',
+            'moderation' => 'required',
+            'moderation_keys' => 'array',
+            'moderation_keys.*' => 'required|string',
+            'blacklist_keys' => 'array',
+            'blacklist_keys.*' => 'required|string',
+            'censor' => 'required',
+            'censors_text' => 'array',
+            'censors_text.*' => 'required|string',
+            'max_links' => 'required|integer',
+            'duplicates_check' => 'required',
+            'report_status' => 'required|string',
+            'max_reports' => 'required|integer',
+            'disk_filesystem' => 'required|string',
+            'upload_rules' => 'required|array',
+            'upload_rules.*' => 'required|string',
+            'upload_rules_max' => 'required|integer',
+            'user_column_name' => 'required|string',
+            'user_column_email' => 'required|string',
+            'user_column_avatar' => 'required|string',
+            'user_column_avatar_url' => 'required|string',
+            'nsfw' => 'required',
+            'nsfw_api_user' => 'string',
+            'nsfw_api_key' => 'string',
+            'recaptcha' => 'required',
+            'recaptcha_key' => 'string',
+            'recaptcha_secret' => 'string',
+        ]);
+
         $settingRepository->set($request);
 
         return back()->with('success', 'Update success');

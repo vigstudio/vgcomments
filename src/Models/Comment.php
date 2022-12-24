@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Relations\hasMany;
 use Illuminate\Database\Eloquent\Relations\hasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Vigstudio\VgComment\Facades\FormatterFacade;
+use Vigstudio\VgComment\Events\CommentCreatedEvent;
 
 class Comment extends BaseModel
 {
     use Traits\HasAttachment;
+    use Traits\HasAuthorComment;
 
     public const TABLE = 'comments';
 
@@ -37,16 +39,19 @@ class Comment extends BaseModel
         'status',
         'root_id',
         'parent_id',
+        'point',
+        'reactions_data',
     ];
 
-    protected $casts = [];
+    protected $casts = [
+        'reactions_data' => 'array',
+    ];
+
+    protected $dispatchesEvents = [
+        'created' => CommentCreatedEvent::class,
+    ];
 
     public function commentable(): MorphTo
-    {
-        return $this->morphTo();
-    }
-
-    public function responder(): MorphTo
     {
         return $this->morphTo();
     }
@@ -84,11 +89,6 @@ class Comment extends BaseModel
     public function reactionsGroup()
     {
         return $this->reactions->groupBy('type');
-    }
-
-    public function getAvatarUrlAttribute()
-    {
-        return \Avatar::create($this->author_name)->setBackground('#2980b9')->toBase64();
     }
 
     public function getTimeAttribute()
