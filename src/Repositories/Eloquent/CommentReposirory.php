@@ -100,6 +100,15 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
 
         $query = $this->query()->with($this->withRelations());
 
+        $query->when(! empty($req['status']), function ($query) use ($req) {
+            if (in_array($req['status'], Comment::STATUSES)) {
+                $query->where('status', $req['status']);
+            }
+            if ($req['status'] === 'deleted') {
+                return $query->onlyTrashed();
+            }
+        });
+
         return $query->orderBy('created_at', 'desc');
     }
 

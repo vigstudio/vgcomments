@@ -6,7 +6,9 @@
         </div>
     </header>
     <main>
-        <div class="mx-auto max-w-7xl sm:px-2 lg:px-3" x-data>
+        <div class="mx-auto max-w-7xl sm:px-2 lg:px-3" x-data="{
+            tab: '{{ request()->get('status') ? request()->get('status') : 'all' }}',
+        }">
             <!-- Replace with your content -->
             <div class="px-4 py-8 sm:px-0" id="app">
                 <div class="px-4 sm:px-6 lg:px-8">
@@ -17,6 +19,34 @@
                     </div>
                     <div class="mt-8 flex flex-col">
                         <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                            <div>
+                                <div class="sm:hidden">
+                                    <label for="tabs" class="sr-only">Select a tab</label>
+                                    <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
+                                    <select id="tabs" name="tabs" @change="tab = $event.target.value;" class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                        @foreach ($tabs as $key)
+                                            <option value="{{ $key }}">{{ __('vgcomment::admin.' . $key) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="hidden sm:block">
+                                    <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
+                                        @foreach ($tabs as $key)
+                                            <a href="{{ route('vgcomments.admin.dashboard', ['status' => $key]) }}"
+                                               x-bind:class="{
+                                                   'text-gray-500 hover:text-gray-700 group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-sm font-medium text-center hover:bg-gray-50 focus:z-10': tab !== '{{ $key }}',
+                                                   'text-gray-900 rounded-l-lg group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-sm font-medium text-center hover:bg-gray-50 focus:z-10': tab === '{{ $key }}',
+                                               }"
+                                               aria-current="page">
+                                                <span>{{ __('vgcomment::admin.' . $key) }}</span>
+                                                <span x-show="tab !== '{{ $key }}'" aria-hidden="true" class="bg-transparent absolute inset-x-0 bottom-0 h-0.5"></span>
+                                                <span x-show="tab === '{{ $key }}'" aria-hidden="true" class="bg-indigo-500 absolute inset-x-0 bottom-0 h-0.5"></span>
+                                            </a>
+                                        @endforeach
+                                    </nav>
+                                </div>
+                            </div>
+
                             <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
                                 <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                                     <table class="table-admin">
@@ -45,27 +75,32 @@
                                                     </td>
                                                     <td>{{ $comment->status_name }}</td>
                                                     <td>
-                                                        {{-- <button type="button" class="btn">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 p-1">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                            </svg>
-                                                        </button>
 
-                                                        <button type="button" class="btn-orange">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 p-1">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                                                            </svg>
+                                                        @if ($comment->status == 'pending')
+                                                            <form method="POST" action="{{ route('vgcomments.admin.comment.update', $comment->id) }}">
+                                                                @csrf
+                                                                @method('PUT')
+                                                                <input type="hidden" name="status" value="approved">
+                                                                <button type="submit" class="btn-success" title="{{ __('vgcomment::admin.approved') }}">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                                                    </svg>
+                                                                    <span>{{ __('vgcomment::admin.approved') }}</span>
+                                                                </button>
+                                                            </form>
+                                                        @endif
 
-                                                        </button>
+                                                        <form method="POST" action="{{ route('vgcomments.admin.comment.delete', $comment->id) }}">
+                                                            @csrf
+                                                            @method('DELETE')
 
-
-                                                        <button type="button" class="btn-danger">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 p-1">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                                                            </svg>
-                                                        </button> --}}
-                                                        (Coming soon)
+                                                            <button type="submit" class="btn-danger">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 p-1">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                                                </svg>
+                                                                <span>{{ __('vgcomment::admin.delete') }}</span>
+                                                            </button>
+                                                        </form>
                                                     </td>
                                                 </tr>
                                             @endforeach

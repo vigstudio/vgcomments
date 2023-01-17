@@ -11,6 +11,7 @@ use s9e\TextFormatter\Renderer;
 use s9e\TextFormatter\Unparser;
 use Vigstudio\VgComment\Events\FormatterConfiguratorEvent;
 use Vigstudio\VgComment\Repositories\ContractsInterface\CommentFormatterInterface;
+use Illuminate\Support\Facades\Artisan;
 
 class CommentFormatter implements CommentFormatterInterface
 {
@@ -55,6 +56,8 @@ class CommentFormatter implements CommentFormatterInterface
     {
         File::cleanDirectory($this->storage->path($this->patchCacheDir));
         $this->cache->forget('vgcomments.formatter');
+        Artisan::call('optimize:clear');
+        Artisan::call('optimize');
     }
 
     protected function getParser(): Parser

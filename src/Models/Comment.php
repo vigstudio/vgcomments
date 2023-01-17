@@ -7,13 +7,22 @@ use Illuminate\Database\Eloquent\Relations\hasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Vigstudio\VgComment\Facades\FormatterFacade;
 use Vigstudio\VgComment\Events\CommentCreatedEvent;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Comment extends BaseModel
 {
     use Traits\HasAttachment;
     use Traits\HasAuthorComment;
+    use SoftDeletes;
 
     public const TABLE = 'comments';
+
+    public const STATUSES = [
+        self::STATUS_SPAM,
+        self::STATUS_TRASH,
+        self::STATUS_PENDING,
+        self::STATUS_APPROVED,
+    ];
 
     public const STATUS_SPAM = 'spam';
 

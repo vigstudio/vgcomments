@@ -10,6 +10,10 @@ Route::group([
 ], function () {
     Route::group(['prefix' => 'admin'], function () {
         Route::get('/', 'AdminController@dashboard')->name('vgcomments.admin.dashboard');
+
+        Route::put('comment/{id}/update', 'AdminController@updateComment')->name('vgcomments.admin.comment.update');
+        Route::delete('comment/{id}/delete', 'AdminController@deleteComment')->name('vgcomments.admin.comment.delete');
+
         Route::get('setting', 'AdminController@setting')->name('vgcomments.admin.setting');
         Route::post('setting', 'AdminController@updateSetting')->name('vgcomments.admin.setting.post');
     });

@@ -6,7 +6,9 @@
         </div>
     </header>
     <main>
-        <div class="mx-auto max-w-7xl sm:px-2 lg:px-3">
+        <div class="mx-auto max-w-7xl sm:px-2 lg:px-3" x-data="{
+            tab: 'general',
+        }">
             <!-- Replace with your content -->
             {{-- @dd($config) --}}
             <div class="px-4 sm:px-6 lg:px-8">
@@ -21,41 +23,64 @@
                 @endif
                 <form action="{{ route('vgcomments.admin.setting.post') }}" method="post">
                     @csrf
-                    @foreach ($config as $key => $value)
-                        <div class="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5 border-t border-gray-200 mt-6">
-                            <label for="last-name" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">{{ trans('vgcomment::admin.' . $key . '_label') }}</label>
-                            <div class="mt-1 sm:col-span-2 sm:mt-0">
-                                @if (gettype($value) == 'string')
-                                    <x-vgcomment::form.input type="text" name="{{ $key }}" value="{{ $value }}" />
-                                @elseif(gettype($value) == 'integer')
-                                    <x-vgcomment::form.input type="number" name="{{ $key }}" value="{{ $value }}" />
-                                @elseif(gettype($value) == 'boolean')
-                                    <x-vgcomment::form.select name="{{ $key }}" value="{{ $value }}" />
-                                @elseif(gettype($value) == 'array')
-                                    <div x-data='{
-                                        items: @json($value),
-                                        pushItem (){
-                                            this.items.push("");
-                                            console.log(this.items);
-                                        }
-                                    }'>
+                    <div>
+                        <div class="sm:hidden">
+                            <label for="tabs" class="sr-only">Select a tab</label>
+                            <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
+                            <select id="tabs" name="tabs" @change="tab = $event.target.value;" class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                @foreach ($config as $key => $tab)
+                                    <option value="{{ $key }}">{{ __('vgcomment::admin.' . $key) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="hidden sm:block">
+                            <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
+                                @foreach ($config as $key => $tab)
+                                    <a x-bind:href="'#' + tab"
+                                       x-on:click.prevent="tab = '{{ $key }}'"
+                                       x-bind:class="{
+                                           'text-gray-500 hover:text-gray-700 group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-sm font-medium text-center hover:bg-gray-50 focus:z-10': tab !== '{{ $key }}',
+                                           'text-gray-900 rounded-l-lg group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-sm font-medium text-center hover:bg-gray-50 focus:z-10': tab === '{{ $key }}',
+                                       }"
+                                       aria-current="page">
+                                        <span>{{ __('vgcomment::admin.' . $key) }}</span>
+                                        <span x-show="tab !== '{{ $key }}'" aria-hidden="true" class="bg-transparent absolute inset-x-0 bottom-0 h-0.5"></span>
+                                        <span x-show="tab === '{{ $key }}'" aria-hidden="true" class="bg-indigo-500 absolute inset-x-0 bottom-0 h-0.5"></span>
+                                    </a>
+                                @endforeach
+                            </nav>
+                        </div>
 
-                                        <div x-for="(item, key) in items" :key="key">
-                                            <x-vgcomment::form.input type="text" name="{{ $key }}[]" x-bind:value="item" />
-                                            <button type="button" :data-key="key" class="inline-flex items-center rounded border border-transparent bg-indigo-100 px-2.5 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mt-5">Remove</button>
-                                        </div>
 
-                                        <button type="button" x-on:click='pushItem()' class="inline-flex items-center rounded border border-transparent bg-indigo-100 px-2.5 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mt-5">+ Add</button>
+                    </div>
+
+
+                    @foreach ($config as $configKey => $tab)
+                        <div x-show="tab === '{{ $configKey }}'">
+                            @foreach ($tab as $key => $value)
+                                <div class="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5 border-t border-gray-200 mt-6">
+                                    <label for="last-name" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">{{ trans('vgcomment::admin.' . $key . '_label') }}</label>
+                                    <div class="mt-1 sm:col-span-2 sm:mt-0">
+                                        @if ($value['type'] == 'string')
+                                            <x-vgcomment::form.input type="text" name="{{ $key }}" :value="$value['value']" />
+                                        @elseif($value['type'] == 'number')
+                                            <x-vgcomment::form.input type="number" name="{{ $key }}" :value="$value['value']" />
+                                        @elseif($value['type'] == 'boolean')
+                                            <x-vgcomment::form.boolean name="{{ $key }}" :value="$value['value']" />
+                                        @elseif($value['type'] == 'select')
+                                            <x-vgcomment::form.select name="{{ $key }}" :options="$value['options']" :value="$value['value']" />
+                                        @elseif($value['type'] == 'array')
+                                            <x-vgcomment::form.array name="{{ $key }}" :key="$key" :value="$value['value']" />
+                                        @endif
+                                        <p class="mt-2 text-sm text-gray-500">{{ trans('vgcomment::admin.' . $key . '_description') }}</p>
                                     </div>
-                                @endif
 
-                                <p class="mt-2 text-sm text-gray-500">{{ trans('vgcomment::admin.' . $key . '_description') }}</p>
-                            </div>
-
+                                </div>
+                            @endforeach
                         </div>
                     @endforeach
 
-                    <button class="btn-orange" type="submit">Submit</button>
+                    <button class="btn-orange mt-10" type="submit">Submit</button>
                 </form>
 
             </div>

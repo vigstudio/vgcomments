@@ -13,6 +13,24 @@ return [
     'created_at' => 'Created At',
     'updated_at' => 'Updated At',
     'deleted_at' => 'Deleted At',
+    'add' => 'Add',
+    'true' => 'True',
+    'false' => 'False',
+
+    'general' => 'General',
+    'moderation' => 'Moderation',
+    'protection' => 'Protection',
+    'all' => 'All',
+    'pending' => 'Pending',
+    'approved' => 'Approved',
+    'rejected' => 'Rejected',
+    'reported' => 'Reported',
+    'spam' => 'Spam',
+    'trash' => 'Trash',
+    'deleted' => 'Deleted',
+
+    'edit' => 'Edit',
+    'delete' => 'Delete',
 
     'setting' => 'Setting',
 
