@@ -23,10 +23,9 @@ class AdminController extends Controller
             'all',
             'pending',
             'approved',
-            'rejected',
-            'reported',
             'spam',
             'trash',
+            'reported',
             'deleted',
         ];
 
