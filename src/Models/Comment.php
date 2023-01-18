@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Relations\hasMany;
 use Illuminate\Database\Eloquent\Relations\hasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Vigstudio\VgComment\Facades\FormatterFacade;
-use Vigstudio\VgComment\Events\CommentCreatedEvent;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Comment extends BaseModel
@@ -54,10 +53,6 @@ class Comment extends BaseModel
 
     protected $casts = [
         'reactions_data' => 'array',
-    ];
-
-    protected $dispatchesEvents = [
-        'created' => CommentCreatedEvent::class,
     ];
 
     public function commentable(): MorphTo

@@ -45,6 +45,7 @@ class AdminController extends Controller
                 'user_column_email' => $this->buildValue('string', 'user_column_email'),
                 'user_column_url' => $this->buildValue('string', 'user_column_url'),
                 'user_column_avatar_url' => $this->buildValue('string', 'user_column_avatar_url'),
+                'broadcast' => $this->buildValue('boolean', 'broadcast'),
                 'allow_guests' => $this->buildValue('boolean', 'allow_guests'),
                 'gravatar' => $this->buildValue('boolean', 'gravatar'),
                 'gravatar_imageset' => $this->buildValue('select', 'gravatar_imageset', ['mm', 'identicon', 'monsterid', 'wavatar', 'retro', 'robohash', 'blank']),
@@ -75,6 +76,7 @@ class AdminController extends Controller
                 'recaptcha_key' => $this->buildValue('string', 'recaptcha_key'),
                 'recaptcha_secret' => $this->buildValue('string', 'recaptcha_secret'),
             ],
+
         ];
 
         return view('vgcomment::setting', compact('config'));

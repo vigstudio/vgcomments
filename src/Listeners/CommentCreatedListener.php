@@ -2,7 +2,9 @@
 
 namespace Vigstudio\VgComment\Listeners;
 
+use Illuminate\Support\Facades\Config;
 use Vigstudio\VgComment\Events\CommentCreatedEvent;
+use Vigstudio\VgComment\Events\BroadcastCommentCreatedEvent;
 
 class CommentCreatedListener
 {
@@ -11,6 +13,7 @@ class CommentCreatedListener
         $comment = $event->comment;
 
         $parent = $comment->parent;
+
         if (! empty($parent->reactions)) {
             $parent->reactions_data = $parent->reactions->groupBy('type')->map(function ($reactions) {
                 return $reactions->count();
@@ -18,6 +21,10 @@ class CommentCreatedListener
 
             $parent->point = $parent->reactions()->count() + $parent->replies()->count();
             $parent->save();
+        }
+
+        if (Config::get('vgcomment.broadcast') && $comment->approved()) {
+            event(new BroadcastCommentCreatedEvent($comment));
         }
     }
 }

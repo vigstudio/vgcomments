@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Vigstudio\VgComment\Facades\FormatterFacade;
 use Vigstudio\VgComment\Http\Traits\CommentValidator;
 use Vigstudio\VgComment\Http\Traits\ThrottlesPosts;
+use Vigstudio\VgComment\Events\CommentCreatedEvent;
 
 class CommentReposirory extends EloquentReposirory implements CommentInterface
 {
@@ -45,6 +46,8 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
             $comment = $comment->fresh();
 
             $this->incrementAttempts($request);
+
+            event(new CommentCreatedEvent($comment));
 
             session()->push('alert', ['success', trans('vgcomment::comment.store_success')]);
 
