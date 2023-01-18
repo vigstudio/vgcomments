@@ -18,7 +18,6 @@ return [
     'true' => 'True',
     'false' => 'False',
     'select_tab' => 'Select a tab',
-
     'general' => 'General',
     'moderation' => 'Moderation',
     'protection' => 'Protection',
@@ -30,11 +29,10 @@ return [
     'trash' => 'Trash',
     'deleted' => 'Deleted',
     'unapprove' => 'Unapprove',
-
     'edit' => 'Edit',
     'delete' => 'Delete',
-
     'setting' => 'Setting',
+    'restore' => 'Restore',
 
     'prefix_label' => 'Prefix Route',
     'prefix_description' => 'This is the prefix for the routes that will be created by the package.',

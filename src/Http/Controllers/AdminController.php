@@ -135,12 +135,6 @@ class AdminController extends Controller
     {
         $comment = Comment::findOrFail($id);
 
-        if (! vgcomment_policy($comment->id, 'moderate')) {
-            session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
-
-            return false;
-        }
-
         $comment->update($request->all());
 
         return back()->with('success', 'Update success');
@@ -149,17 +143,30 @@ class AdminController extends Controller
     public function deleteComment($id)
     {
         $comment = Comment::findOrFail($id);
-
-        if (! vgcomment_policy($comment->id, 'moderate')) {
-            session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
-
-            return false;
-        }
-
-        $comment->status = Comment::STATUS_TRASH;
-        $comment->save();
-
+        $comment->replies()->delete();
         $comment->delete();
+
+        return back()->with('success', 'Update success');
+    }
+
+    public function restoreComment($id)
+    {
+        $comment = Comment::onlyTrashed()->findOrFail($id);
+        $comment->restore();
+
+        $comment->replies()->onlyTrashed()->restore();
+
+        return back()->with('success', 'Update success');
+    }
+
+    public function forceDeleteComment($id)
+    {
+        $comment = Comment::onlyTrashed()->findOrFail($id);
+        $comment->replies()->forceDelete();
+        $comment->reactions()->forceDelete();
+        $comment->reports()->forceDelete();
+        $comment->files()->forceDelete();
+        $comment->forceDelete();
 
         return back()->with('success', 'Update success');
     }
