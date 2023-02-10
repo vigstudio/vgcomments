@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\hasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Vigstudio\VgComment\Facades\FormatterFacade;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Gate;
 
 class Comment extends BaseModel
 {
@@ -88,6 +89,15 @@ class Comment extends BaseModel
     public function files()
     {
         return $this->hasMany(FileComment::class, 'comment_id');
+    }
+
+    public function getPolicyAttribute()
+    {
+        return [
+            'update' => Gate::allows('update', $this),
+            'delete' => Gate::allows('delete', $this),
+            'report' => Gate::allows('report', $this),
+        ];
     }
 
     public function reactionsGroup()

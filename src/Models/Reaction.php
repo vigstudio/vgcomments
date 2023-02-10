@@ -37,6 +37,10 @@ class Reaction extends BaseModel
     {
         $auth = GetAuthenticatableService::get();
 
+        if ($auth === false) {
+            return false;
+        }
+
         return $this->reactable_type === get_class($auth) && $this->reactable_id === $auth->getAuthIdentifier();
     }
 }

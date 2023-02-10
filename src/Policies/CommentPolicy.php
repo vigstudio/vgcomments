@@ -22,6 +22,10 @@ class CommentPolicy
 
     public function update(?Authenticatable $auth, Comment $comment): bool
     {
+        if (! $auth) {
+            return false;
+        }
+
         if ($auth->can('moderate', Comment::class)) {
             return true;
         }
@@ -30,7 +34,7 @@ class CommentPolicy
             return false;
         }
 
-        if ($auth->comments()->where('id', $comment->id)->exists()) {
+        if ($comment->responder_type == $auth->getMorphClass() && $comment->responder_id == $auth->getKey()) {
             return true;
         }
 
@@ -39,6 +43,10 @@ class CommentPolicy
 
     public function delete(?Authenticatable $auth, Comment $comment): bool
     {
+        if (! $auth) {
+            return false;
+        }
+
         if ($auth->can('moderate', Comment::class)) {
             return true;
         }
@@ -47,7 +55,7 @@ class CommentPolicy
             return false;
         }
 
-        if ($auth->comments()->where('id', $comment->id)->exists()) {
+        if ($comment->responder_type == $auth->getMorphClass() && $comment->responder_id == $auth->getKey()) {
             return true;
         }
 

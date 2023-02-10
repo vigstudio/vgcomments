@@ -13,6 +13,6 @@ class FormatterConfiguratorListener
 
     public function handle(FormatterConfiguratorEvent $event): void
     {
-       //
+        //
     }
 }

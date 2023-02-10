@@ -125,7 +125,11 @@ class CommentService
 
         $input = $request->only('content');
 
-        return $comment->update($input);
+        $result =  $comment->update($input);
+
+        session()->push('alert', ['success', trans('vgcomment::comment.update_success')]);
+
+        return $result;
     }
 
     /**
@@ -145,7 +149,11 @@ class CommentService
             return false;
         }
 
-        return $this->commentRepository->delete($comment->id);
+        $result =  $this->commentRepository->delete($comment->id);
+
+        session()->push('alert', ['success', trans('vgcomment::comment.delete_success')]);
+
+        return $result;
     }
 
     /**
@@ -208,6 +216,8 @@ class CommentService
         if ($maxReports && $comment->reports()->count() >= $maxReports) {
             $comment->update(['status' => $status]);
         }
+
+        session()->push('alert', ['success', trans('vgcomment::comment.report_success')]);
 
         return true;
     }

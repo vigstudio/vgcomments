@@ -110,6 +110,11 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
             if ($req['status'] === 'deleted') {
                 return $query->onlyTrashed();
             }
+            if ($req['status'] === 'reported') {
+                return $query->whereHas('reports', function ($query) {
+                    $query->where('status', '!=', 'resolved');
+                });
+            }
         });
 
         return $query->orderBy('created_at', 'desc');
