@@ -3,7 +3,11 @@
     "description": "Comments package for applications. Using this package, you can create and associate comments with Eloquent models.",
     "keywords": [
         "vigstudio",
-        "vgcomment"
+        "vgcomment",
+        "livewire-comments",
+        "laravel-comments",
+        "comments",
+        "comments-system"
     ],
     "homepage": "https://github.com/vigstudio/vgcomment",
     "license": "MIT",
