@@ -74,6 +74,10 @@ class CommentPolicy
     {
         $auth = $this->auth;
 
+        if (! $auth) {
+            return false;
+        }
+
         if (! $comment->approved()) {
             return false;
         }

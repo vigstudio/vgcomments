@@ -230,14 +230,22 @@ class CommentService
         $email = ! empty($this->config['user_column_email']) ? $this->config['user_column_email'] : 'email';
         $url = ! empty($this->config['user_column_url']) ? $this->config['user_column_url'] : 'url';
 
+        $author_name = $auth ? $auth->$name : $request->author_name;
+        $author_email = $auth ? $auth->$email : $request->author_email;
+        $author_url = $auth ? $auth->$url : $request->author_url;
+
+        $request->session()->put('author.name', $author_name);
+        $request->session()->put('author.email', $author_email);
+        $request->session()->put('author.url', $author_url);
+
         $mergeRequest = [
             'author_ip' => $request->server('REMOTE_ADDR'),
             'user_agent' => $request->server('HTTP_USER_AGENT'),
             'responder_type' => $auth ? get_class($auth) : null,
             'responder_id' => $auth ? $auth->getKey() : null,
-            'author_name' => $auth ? $auth->$name : $request->author_name,
-            'author_email' => $auth ? $auth->$email : $request->author_email,
-            'author_url' => $auth ? $auth->$url : $request->author_url,
+            'author_name' => $author_name,
+            'author_email' => $author_email,
+            'author_url' => $author_url,
             'permalink' => $request->server('HTTP_REFERER'),
         ];
 

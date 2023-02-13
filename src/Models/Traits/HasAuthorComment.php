@@ -26,7 +26,7 @@ trait HasAuthorComment
             return $this->responder->name;
         }
 
-        return $this->author_name;
+        return $this->attributes['author_name'];
     }
 
     public function getAuthorUrlAttribute()
@@ -35,7 +35,7 @@ trait HasAuthorComment
             return $this->responder->url;
         }
 
-        return $this->author_url;
+        return $this->attributes['author_url'];
     }
 
     public function getAuthorEmailAttribute()
@@ -44,6 +44,6 @@ trait HasAuthorComment
             return $this->responder->email;
         }
 
-        return $this->author_email;
+        return $this->attributes['author_email'];
     }
 }

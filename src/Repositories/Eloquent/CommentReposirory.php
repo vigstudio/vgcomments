@@ -128,8 +128,9 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
             ->where('content', FormatterFacade::parse($request['content']))
             ->where('commentable_id', $request['commentable_id'])
             ->where('commentable_type', $request['commentable_type'])
-            ->where('responder_id', $auth->getKey())
-            ->where('responder_type', get_class($auth))
+            ->when($auth, function ($query) use ($auth) {
+                return $query->where('responder_id', $auth->getKey())->where('responder_type', get_class($auth));
+            })
             ->exists();
 
         return $duplicate;
