@@ -5,23 +5,29 @@ namespace Vigstudio\VgComment\Policies;
 use Illuminate\Support\Facades\Config;
 use Vigstudio\VgComment\Models\Comment;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Vigstudio\VgComment\Services\GetAuthenticatableService;
 
 class CommentPolicy
 {
     protected $config;
+    protected $auth;
 
     public function __construct()
     {
         $this->config = Config::get('vgcomment');
+        $this->auth = GetAuthenticatableService::get();
     }
 
     public function moderate(?Authenticatable $auth): bool
     {
+        $auth = $this->auth;
+
         return $auth->can('vgcomment-moderate');
     }
 
     public function update(?Authenticatable $auth, Comment $comment): bool
     {
+        $auth = $this->auth;
         if (! $auth) {
             return false;
         }
@@ -43,6 +49,8 @@ class CommentPolicy
 
     public function delete(?Authenticatable $auth, Comment $comment): bool
     {
+        $auth = $this->auth;
+
         if (! $auth) {
             return false;
         }
@@ -64,6 +72,8 @@ class CommentPolicy
 
     public function report(?Authenticatable $auth, Comment $comment): bool
     {
+        $auth = $this->auth;
+
         if (! $comment->approved()) {
             return false;
         }

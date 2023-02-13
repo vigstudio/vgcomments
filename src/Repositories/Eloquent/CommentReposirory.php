@@ -149,11 +149,13 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
             'reactions',
             'parent',
             'files',
+            'responder',
             'replies' => [
                 'parent',
                 'replies',
                 'reactions',
                 'files',
+                'responder',
             ],
         ];
     }
