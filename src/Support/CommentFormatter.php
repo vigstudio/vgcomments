@@ -99,6 +99,10 @@ class CommentFormatter implements CommentFormatterInterface
 
         //Auto image
         $this->configurator->Autoimage;
+        $imgTag = $this->configurator->tags->add('IMG');
+        $filterImgTag = $this->configurator->attributeFilters->get('#url');
+        $imgTag->attributes->add('src')->filterChain->append($filterImgTag);
+        $imgTag->template = '<img loading="lazy" src="{@src}"><xsl:apply-templates/></img>';
 
         //Auto link
         $urlTag = $this->configurator->tags->add('URL');
