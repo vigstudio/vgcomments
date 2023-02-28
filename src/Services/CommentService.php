@@ -15,6 +15,7 @@ use Vigstudio\VgComment\Repositories\Interface\ReactionInterface;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class CommentService
 {
@@ -51,28 +52,30 @@ class CommentService
         return GetAuthenticatableService::get();
     }
 
-    /**
-     * Get comments.
-     *
-     * @param array $req
-     * @return JsonResource
-     */
-    public function get(array $req = []): JsonResource
+    public function get(array $req = [], $jsonResource = true): JsonResource|LengthAwarePaginator
     {
         $comments = $this->commentRepository
                         ->getComments($req)
                         ->paginate($perPage = 10, $columns = ['*'], $pageName = 'vgcomment_page');
 
-        return CommentResource::collection($comments);
+        if ($jsonResource) {
+            return CommentResource::collection($comments);
+        }
+
+        return $comments;
     }
 
-    public function getAdmin(array $req = []): JsonResource
+    public function getAdmin(array $req = [], $jsonResource = true): JsonResource
     {
         $comments = $this->commentRepository
                         ->getCommentsAdmin($req)
                         ->paginate($perPage = 10, $columns = ['*'], $pageName = 'vgcomment_page');
 
-        return CommentResource::collection($comments);
+        if ($jsonResource) {
+            return CommentResource::collection($comments);
+        }
+
+        return $comments;
     }
 
     /**

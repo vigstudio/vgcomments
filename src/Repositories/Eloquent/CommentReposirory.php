@@ -61,7 +61,9 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
     {
         $request = $this->makeRequest($req);
 
-        $query = $this->query()->with($this->withRelations());
+        $query = $this->query()
+                        ->with($this->withRelations($req))
+                        ->whereNull('parent_id');
 
         $commentableExists = $this->commentableExists($request);
 
@@ -78,21 +80,9 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
             $query->where('page_id', $request->page_id);
         });
 
-        $query->whereNull('parent_id');
-
         $this->inStatus($query, [Comment::STATUS_APPROVED]);
 
-        $query->when($request->order === 'latest', function ($query) {
-            $query->orderBy('created_at', 'desc');
-        });
-
-        $query->when($request->order === 'oldest', function ($query) {
-            $query->orderBy('created_at', 'asc');
-        });
-
-        $query->when($request->order === 'popular', function ($query) {
-            $query->orderBy('point', 'desc');
-        });
+        $this->orderComment($query, $request->order);
 
         return $query;
     }
@@ -101,7 +91,7 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
     {
         $request = $this->makeRequest($req);
 
-        $query = $this->query()->with($this->withRelations());
+        $query = $this->query()->with($this->withRelations($req));
 
         $query->when(! empty($req['status']), function ($query) use ($req) {
             if (in_array($req['status'], Comment::STATUSES)) {
@@ -152,14 +142,37 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
         });
     }
 
-    protected function withRelations(): array
+    protected function orderComment(Builder $query, string|null $order): void
     {
+        match ($order) {
+            'latest' => $query->orderBy('created_at', 'desc'),
+            'oldest' => $query->orderBy('created_at', 'asc'),
+            'popular' => $query->orderBy('point', 'desc'),
+        };
+    }
+
+    protected function withRelations(array $request): array
+    {
+        $request = $this->makeRequest($request);
+
+        $hash = vgcomment_page_hash($request->page_id, $request->commentable_id, $request->commentable_type);
+
         return [
-            'reactions',
-            'parent',
-            'files',
-            'responder',
-            'replies',
+            'reactions' => function ($query) use ($hash) {
+                return $query->cacheTags(['vigcomment_reaction_releation_' . $hash]);
+            },
+            'parent' => function ($query) use ($hash) {
+                return $query->cacheTags(['vigcomment_reaction_parent_' . $hash]);
+            },
+            'files' => function ($query) use ($hash) {
+                return $query->cacheTags(['vigcomment_reaction_files_' . $hash]);
+            },
+            'responder' => function ($query) use ($hash) {
+                return $query->cacheTags(['vigcomment_reaction_responder_' . $hash]);
+            },
+            'replies' => function ($query) use ($hash) {
+                return $query->cacheTags(['vigcomment_reaction_replies_' . $hash]);
+            },
         ];
     }
 

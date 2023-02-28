@@ -12,7 +12,7 @@
     "homepage": "https://github.com/vigstudio/vgcomment",
     "license": "MIT",
     "type": "laravel-library",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "authors": [
         {
             "name": "Viet Nghia",
@@ -26,7 +26,8 @@
         "s9e/text-formatter": "^2.12.0",
         "vigstudio/laravel-avatar": "^1.0.0",
         "intervention/image": "^2.7.2",
-        "vigstudio/laravel-stopforumspam": "^1.0.0"
+        "vigstudio/laravel-stopforumspam": "^1.0.0",
+        "vigstudio/laravel-eloquent-query-cache": "^1.0.0"
     },
     "require-dev": {
         "orchestra/testbench": "^6.0|^8.0",
