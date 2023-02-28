@@ -197,7 +197,12 @@ class CommentService
     {
         $comment = $this->commentRepository->findByUuid($uuid);
 
-        return $this->getAuth()->react($comment, $type);
+        if ($this->getAuth()) {
+            return $this->getAuth()->react($comment, $type);
+        }
+        session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
+
+        return false;
     }
 
     /**
