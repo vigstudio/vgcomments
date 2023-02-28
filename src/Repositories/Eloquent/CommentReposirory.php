@@ -49,7 +49,7 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
 
             event(new CommentCreatedEvent($comment));
 
-            session()->push('alert', ['success', trans('vgcomment::comment.store_success')]);
+            $this->pushAlert($comment);
 
             return $comment;
         } catch (\Throwable $th) {
@@ -111,9 +111,7 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
                 return $query->onlyTrashed();
             }
             if ($req['status'] === 'reported') {
-                return $query->whereHas('reports', function ($query) {
-                    $query->where('status', '!=', 'resolved');
-                });
+                return $query->has('reports');
             }
         });
 
@@ -136,6 +134,16 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
         return $duplicate;
     }
 
+    protected function pushAlert(Comment $comment): void
+    {
+        match ($comment->status) {
+            Comment::STATUS_APPROVED => session()->push('alert', ['success', trans('vgcomment::comment.store_success')]),
+            Comment::STATUS_PENDING => session()->push('alert', ['alert', trans('vgcomment::comment.store_pending')]),
+            Comment::STATUS_SPAM => session()->push('alert', ['error', trans('vgcomment::comment.store_success')]),
+            Comment::STATUS_TRASH => session()->push('alert', ['error', trans('vgcomment::comment.store_success')]),
+        };
+    }
+
     protected function inStatus(Builder $query, array $status): void
     {
         $query->where('status', '!=', Comment::STATUS_TRASH);
@@ -151,13 +159,7 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
             'parent',
             'files',
             'responder',
-            'replies' => [
-                'parent',
-                'replies',
-                'reactions',
-                'files',
-                'responder',
-            ],
+            'replies',
         ];
     }
 

@@ -5,7 +5,7 @@ namespace Vigstudio\VgComment\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class CommentResource extends JsonResource
+class ReplieResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -23,6 +23,7 @@ class CommentResource extends JsonResource
             'permalink' => $this->permalink,
             'root_id' => $this->root_id,
             'page_id' => $this->page_id,
+            'parent_id' => $this->parent_id,
             'created_at' => $this->created_at,
             'time' => $this->time,
             'status' => $this->status,
@@ -30,7 +31,7 @@ class CommentResource extends JsonResource
             'author' => $this->getAuthorAttribute(),
             'avatar' => $this->getAuthorAvatarAttribute(),
             'policy' => $this->policy,
-            'replies' => ReplieResource::collection($this->replies)->toArray($request),
+            'parent' => $this->parent->toArray(),
             'files' => FileResource::collection($this->files)->toArray($request),
             'reactions' => ReactionResource::collection($this->reactions)->toArray($request),
         ];

@@ -63,7 +63,13 @@ class Comment extends BaseModel
 
     public function replies(): hasMany
     {
-        return $this->hasMany(static::class, 'root_id');
+        return $this->hasMany(static::class, 'root_id')->with([
+            'parent',
+            'replies',
+            'reactions',
+            'files',
+            'responder',
+        ]);
     }
 
     public function parent(): hasOne

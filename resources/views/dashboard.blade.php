@@ -57,6 +57,7 @@
                                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ __('vgcomment::admin.user_agent') }}</th>
                                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ __('vgcomment::admin.content') }}</th>
                                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ __('vgcomment::admin.status') }}</th>
+                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ __('vgcomment::admin.has_report') }}</th>
                                                 <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                                     <span class="sr-only">Edit</span>
                                                 </th>
@@ -87,6 +88,9 @@
                                                     </td>
                                                     <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                                         @include('vgcomment::dashboard._td-status', ['comment' => $comment])
+                                                    </td>
+                                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                                        <span class="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">{{ $comment->reports()->count() }}</span>
                                                     </td>
                                                     <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                                         @include('vgcomment::dashboard._td-action', ['comment' => $comment])

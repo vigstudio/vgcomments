@@ -70,7 +70,7 @@ class Moderator implements ModeratorInterface
         return false;
     }
 
-    protected function hasTooManyLinks($comment)
+    protected function hasTooManyLinks(Comment $comment)
     {
         if (! $this->config['max_links']) {
             return false;
@@ -85,7 +85,7 @@ class Moderator implements ModeratorInterface
         return $found >= $this->config['max_links'];
     }
 
-    protected function isSpam($comment)
+    protected function isSpam(Comment $comment)
     {
         $isSpamEmail = (new StopForumSpam())->setEmail($comment->author_email)->isSpamEmail();
         $isSpamIp = (new StopForumSpam())->setIp($comment->author_ip)->isSpamIp();

@@ -145,6 +145,7 @@ class AdminController extends Controller
     public function deleteComment($id)
     {
         $comment = Comment::findOrFail($id);
+
         $comment->replies()->delete();
         $comment->delete();
 
@@ -164,10 +165,12 @@ class AdminController extends Controller
     public function forceDeleteComment($id)
     {
         $comment = Comment::onlyTrashed()->findOrFail($id);
-        $comment->replies()->forceDelete();
+
+        $comment->replies()->withTrashed()->forceDelete();
         $comment->reactions()->forceDelete();
         $comment->reports()->forceDelete();
         $comment->files()->forceDelete();
+
         $comment->forceDelete();
 
         return back()->with('success', 'Update success');
