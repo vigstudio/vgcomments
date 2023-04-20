@@ -90,6 +90,20 @@ class VgCommentServiceProvider extends ServiceProvider
                 ]);
             });
 
+            MacroableFacades::addMacro($authModel, 'unReact', function (Comment $comment, string $type) {
+                $reaction = $this->reactions()->where('comment_uuid', $comment->getUuid())->first();
+
+                if (empty($reaction)) {
+                    return false;
+                }
+
+                if ($reaction->type == $type) {
+                    return $reaction->delete();
+                }
+
+                return false;
+            });
+
             $authModel::resolveRelationUsing('reports', function ($model) {
                 return $model->morphMany(Report::class, 'reporter');
             });

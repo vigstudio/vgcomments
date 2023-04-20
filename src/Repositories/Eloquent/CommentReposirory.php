@@ -171,7 +171,8 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
                 return $query->cacheTags(['vigcomment_reaction_responder_' . $hash]);
             },
             'replies' => function ($query) use ($hash) {
-                return $query->cacheTags(['vigcomment_reaction_replies_' . $hash]);
+                return $query->where('status', Comment::STATUS_APPROVED)
+                            ->cacheTags(['vigcomment_reaction_replies_' . $hash]);
             },
         ];
     }

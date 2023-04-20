@@ -64,11 +64,22 @@ class Comment extends BaseModel
     public function replies(): hasMany
     {
         return $this->hasMany(static::class, 'root_id')->with([
-            'parent',
-            'replies',
-            'reactions',
-            'files',
-            'responder',
+            'reactions' => function ($query) {
+                return $query->cacheTags(['vigcomment_reaction_releation_' . $this->uuid]);
+            },
+            'parent' => function ($query) {
+                return $query->cacheTags(['vigcomment_reaction_parent_' . $this->uuid]);
+            },
+            'files' => function ($query) {
+                return $query->cacheTags(['vigcomment_reaction_files_' . $this->uuid]);
+            },
+            'responder' => function ($query) {
+                return $query->cacheTags(['vigcomment_reaction_responder_' . $this->uuid]);
+            },
+            'replies' => function ($query) {
+                return $query->where('status', Comment::STATUS_APPROVED)
+                            ->cacheTags(['vigcomment_reaction_replies_' . $this->uuid]);
+            },
         ]);
     }
 

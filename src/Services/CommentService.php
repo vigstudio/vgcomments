@@ -47,11 +47,23 @@ class CommentService
         $this->reactionRepository = $reactionRepository;
     }
 
+    /**
+     * Author by Vigstudio
+     *
+     * @return \Illuminate\Contracts\Auth\Authenticatable|bool
+     */
     public function getAuth(): Authenticatable|bool
     {
         return GetAuthenticatableService::get();
     }
 
+    /**
+     * Author by Vigstudio
+     *
+     * @param array $req
+     * @param bool $jsonResource
+     * @return \Illuminate\Http\Resources\Json\JsonResource|\Illuminate\Pagination\LengthAwarePaginator
+     */
     public function get(array $req = [], $jsonResource = true): JsonResource|LengthAwarePaginator
     {
         $comments = $this->commentRepository
@@ -65,7 +77,14 @@ class CommentService
         return $comments;
     }
 
-    public function getAdmin(array $req = [], $jsonResource = true): JsonResource
+    /**
+     * Author by Vigstudio
+     *
+     * @param array $req
+     * @param bool $jsonResource
+     * @return \Illuminate\Http\Resources\Json\JsonResource
+     */
+    public function getAdmin(array $req = [], bool $jsonResource = true): JsonResource
     {
         $comments = $this->commentRepository
                         ->getCommentsAdmin($req)
@@ -79,11 +98,10 @@ class CommentService
     }
 
     /**
-     * Get comment by Id.
      * Author by Vigstudio
      *
      * @param int $id
-     * @return JsonResource
+     * @return \Illuminate\Http\Resources\Json\JsonResource
      */
     public function findById(int $id): mixed
     {
@@ -93,11 +111,10 @@ class CommentService
     }
 
     /**
-     * Store new comment.
      * Author by Vigstudio
      *
      * @param string $uuid
-     * @return JsonResource
+     * @return \Illuminate\Http\Resources\Json\JsonResource
      */
     public function store(array $req): Comment|bool
     {
@@ -108,9 +125,9 @@ class CommentService
     }
 
     /**
-     * Update comment.
      * Author by Vigstudio
      *
+     * @param array $req
      * @param string $uuid
      * @return bool
      */
@@ -136,7 +153,6 @@ class CommentService
     }
 
     /**
-     * Delete comment.
      * Author by Vigstudio
      *
      * @param string $uuid
@@ -160,11 +176,10 @@ class CommentService
     }
 
     /**
-     * Service to upload files
      * Author by Vigstudio
      *
      * @param $files
-     * @return JsonResource|bool
+     * @return \Illuminate\Http\Resources\Json\JsonResource|bool
      */
     public function upload($files): JsonResource|bool
     {
@@ -174,10 +189,9 @@ class CommentService
     }
 
       /**
-     * Register file for comment.
      * Author by Vigstudio
      *
-     * @param Comment $comment
+     * @param \Vigstudio\VgComment\Models\Comment $comment
      * @param array $files
      * @return bool
      */
@@ -187,18 +201,19 @@ class CommentService
     }
 
     /**
-     * Service to reaction comment
      * Author by Vigstudio
      *
      * @param $uuid
      * @return bool
      */
-    public function reaction(string $uuid, string $type)
+    public function reaction(string $uuid, string $type): bool
     {
         $comment = $this->commentRepository->findByUuid($uuid);
 
         if ($this->getAuth()) {
-            return $this->getAuth()->react($comment, $type);
+            $this->getAuth()->react($comment, $type);
+
+            return true;
         }
         session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
 
@@ -206,13 +221,32 @@ class CommentService
     }
 
     /**
-     * Service to report comment
      * Author by Vigstudio
      *
      * @param $uuid
      * @return bool
      */
-    public function report(string $uuid)
+    public function deleteReaction(string $uuid, string $type): bool
+    {
+        $comment = $this->commentRepository->findByUuid($uuid);
+
+        if ($this->getAuth()) {
+            $this->getAuth()->unReact($comment, $type);
+
+            return true;
+        }
+        session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
+
+        return false;
+    }
+
+    /**
+     * Author by Vigstudio
+     *
+     * @param $uuid
+     * @return bool
+     */
+    public function report(string $uuid): bool
     {
         $comment = $this->commentRepository->findByUuid($uuid);
 
@@ -230,6 +264,12 @@ class CommentService
         return true;
     }
 
+     /**
+     * Author by Vigstudio
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return array
+     */
     protected function mergeRequest(Request $request): array
     {
         $auth = $this->getAuth();

@@ -4,15 +4,15 @@ namespace Vigstudio\VgComment\Repositories\ContractsInterface;
 
 interface MacroableInterface
 {
-    public function getAllMacros();
+    public function getAllMacros(): array;
 
-    public function addMacro(string $model, string $name, \Closure $closure);
+    public function addMacro(string $model, string $name, \Closure $closure): void;
 
-    public function removeMacro($model, string $name);
+    public function removeMacro(string $model, string $name): bool;
 
-    public function modelHasMacro($model, $name);
+    public function modelHasMacro(string $model, string $name): bool;
 
-    public function modelsThatImplement($name);
+    public function modelsThatImplement(string $name): array;
 
-    public function macrosForModel($model);
+    public function macrosForModel(string $model): array;
 }
