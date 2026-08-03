@@ -121,21 +121,24 @@ class FileReposirory extends EloquentReposirory implements FileInterface
         }
 
         $name = $file->hashName();
-        $mine = Str::before($file->getMimeType(), '/');
-        $path = $file->store('/' . $this->config['prefix'] . '/' . $mine);
+        $mime = Str::before($file->getMimeType(), '/');
+        $disk = $this->config['disk_filesystem'];
+        $path = $file->store('/'.$this->config['prefix'].'/'.$mime, $disk);
 
         $fileComment = $this->create([
             'hash' => $hash,
             'name' => $name,
             'path' => $path,
             'file_name' => $file->getClientOriginalName(),
-            'mime' => $mine,
+            'mime' => $mime,
             'mime_type' => $file->getMimeType(),
-            'disk' => $this->config['disk_filesystem'],
+            'disk' => $disk,
             'size' => $file->getSize(),
         ]);
 
-        $file->delete();
+        if (method_exists($file, 'delete')) {
+            $file->delete();
+        }
 
         return $fileComment;
     }

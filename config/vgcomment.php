@@ -67,6 +67,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Allowed commentable model classes
+    |--------------------------------------------------------------------------
+    |
+    | Morph comment targets must be listed here. Leave empty to only allow
+    | page_id based comments (recommended default).
+    |
+    */
+    'allowed_commentable_types' => [
+        // \App\Models\Post::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed reaction types
+    |--------------------------------------------------------------------------
+    */
+    'reaction_types' => ['👍', '❤️', '😄', '😮', '😢', '😡'],
+
+    /*
+    |--------------------------------------------------------------------------
     | Gravatar Settings Imageset
     |--------------------------------------------------------------------------
     |
@@ -240,7 +260,7 @@ return [
     | "upload_rules_max"        : Maximum number of files to upload
     |
     */
-    'upload_rules' => ['max:5120', 'mimes:doc,pdf,jpg,png,jpge,gif'],
+    'upload_rules' => ['max:5120', 'mimes:doc,pdf,jpg,jpeg,png,gif'],
     'upload_rules_max' => 5,
 
     /*

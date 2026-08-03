@@ -1,7 +1,23 @@
 <?php
 
+use Illuminate\Support\Facades\Config;
 use Vigstudio\VgComment\Models\Comment;
 use Vigstudio\VgComment\Services\GetAuthenticatableService;
+use Illuminate\Contracts\Auth\Authenticatable;
+
+if (! function_exists('vgcomment_config')) {
+    function vgcomment_config(): array
+    {
+        return Config::get('vgcomment');
+    }
+}
+
+if (! function_exists('vgcomment_auth')) {
+    function vgcomment_auth(): Authenticatable|bool
+    {
+        return GetAuthenticatableService::get();
+    }
+}
 
 if (! function_exists('vgcomment_policy')) {
     function vgcomment_policy(int $commentId, string $policy): bool

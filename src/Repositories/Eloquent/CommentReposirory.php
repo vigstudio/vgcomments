@@ -30,6 +30,12 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
             return false;
         }
 
+        if (! $request->filled('page_id') && ! $this->commentableExists($request)) {
+            session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
+
+            return false;
+        }
+
         if ($this->tooManyAttempts($request)) {
             $seconds = $this->availableIn($request);
 
@@ -181,14 +187,19 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
     {
         $id = $request->commentable_id;
         $type = $request->commentable_type;
+        $allowedTypes = config('vgcomment.allowed_commentable_types', []);
 
-        if (! class_exists($type)) {
+        if (blank($type) || blank($id) || ! is_string($type) || ! class_exists($type)) {
+            return false;
+        }
+
+        if (empty($allowedTypes) || ! in_array($type, $allowedTypes, true)) {
             return false;
         }
 
         $model = new $type();
 
-        return ! is_null($model->find($id, [$model->getKeyName()]));
+        return ! is_null($model->newQuery()->find($id, [$model->getKeyName()]));
     }
 
     protected function protectedRequest(Request $request): array

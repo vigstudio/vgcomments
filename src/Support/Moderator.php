@@ -61,7 +61,7 @@ class Moderator implements ModeratorInterface
             }
 
             foreach ($fields as $field) {
-                if (is_string($field) && preg_match('/\b' . $key . '\b/', $field)) {
+                if (is_string($field) && preg_match('/\b' . preg_quote($key, '/') . '\b/u', $field)) {
                     return true;
                 }
             }

@@ -15,19 +15,20 @@ class CommentResource extends JsonResource
      */
     public function toArray($request)
     {
+        $author = $this->getAuthorAttribute();
+        unset($author['email']);
+
         return [
             'id' => $this->id,
             'uuid' => $this->uuid,
             'content' => $this->content_html,
-            'user_agent' => $this->user_agent,
-            'permalink' => $this->permalink,
             'root_id' => $this->root_id,
+            'parent_id' => $this->parent_id,
             'page_id' => $this->page_id,
             'created_at' => $this->created_at,
             'time' => $this->time,
             'status' => $this->status,
-            'commentable' => $this->commentable,
-            'author' => $this->getAuthorAttribute(),
+            'author' => $author,
             'avatar' => $this->getAuthorAvatarAttribute(),
             'policy' => $this->policy,
             'replies' => ReplieResource::collection($this->replies)->toArray($request),

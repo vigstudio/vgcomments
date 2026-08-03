@@ -137,7 +137,12 @@ class AdminController extends Controller
     {
         $comment = Comment::findOrFail($id);
 
-        $comment->update($request->all());
+        $validated = $request->validate([
+            'status' => 'required|string|in:'.implode(',', Comment::STATUSES),
+            'content' => 'nullable|string|max:5000',
+        ]);
+
+        $comment->update($validated);
 
         return back()->with('success', 'Update success');
     }

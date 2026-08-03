@@ -82,9 +82,11 @@ class CommentFormatter implements CommentFormatterInterface
     {
         $cacheKey = "vgcomments.formatter.$key";
 
-        return $this->cache->rememberForever($cacheKey, function () use ($key) {
+        $cache =  $this->cache->rememberForever($cacheKey, function () use ($key) {
             return $this->getConfigurator()->finalize()[$key];
         });
+
+        return $cache;
     }
 
     protected function getConfigurator(): Configurator
