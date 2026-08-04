@@ -188,6 +188,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | StopForumSpam
+    |--------------------------------------------------------------------------
+    |
+    | Check guest author email/IP against api.stopforumspam.org before publishing.
+    | Disable on demos or when client IPs are unreliable (misconfigured proxies).
+    | stopforumspam_frequency: minimum appearance count before treating as spam.
+    |
+    */
+    'stopforumspam' => env('VGCOMMENT_STOPFORUMSPAM', true),
+    'stopforumspam_frequency' => (int) env('VGCOMMENT_STOPFORUMSPAM_FREQUENCY', 10),
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Censor
     |--------------------------------------------------------------------------
     |

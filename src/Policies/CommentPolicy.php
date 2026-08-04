@@ -18,11 +18,15 @@ class CommentPolicy
         $this->auth = GetAuthenticatableService::get();
     }
 
-    public function moderate(?Authenticatable $auth): bool
+    public function moderate(?Authenticatable $auth = null): bool
     {
-        $auth = $this->auth;
+        $user = $auth ?: $this->auth;
 
-        return $auth->can('vgcomment-moderate');
+        if (! $user) {
+            return false;
+        }
+
+        return $user->can('vgcomment-moderate');
     }
 
     public function update(?Authenticatable $auth, Comment $comment): bool

@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use Vigstudio\VgComment\Facades\CommentServiceFacade;
 use Vigstudio\VgComment\Facades\FormatterFacade;
 use Vigstudio\VgComment\Http\Resources\CommentResource;
+use Vigstudio\VgComment\Models\Comment;
 use Vigstudio\VgComment\Http\Resources\FileResource;
 use Vigstudio\VgComment\Services\ValidatorService;
 
@@ -68,8 +69,16 @@ class CommentController extends Controller
         $comment->load(['replies', 'files', 'reactions', 'responder', 'parent']);
         $comment->nestReplies();
 
+        $alerts = collect(session()->pull('alert', []));
+        $message = $alerts->pluck(1)->filter()->first() ?: match ($comment->status) {
+            Comment::STATUS_PENDING => trans('vgcomment::comment.store_pending'),
+            Comment::STATUS_SPAM => trans('vgcomment::comment.store_spam'),
+            Comment::STATUS_TRASH => trans('vgcomment::comment.store_trash'),
+            default => trans('vgcomment::comment.store_success'),
+        };
+
         return response()->json([
-            'message' => trans('vgcomment::comment.store_success'),
+            'message' => $message,
             'data' => new CommentResource($comment),
         ], 201);
     }

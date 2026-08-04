@@ -183,8 +183,8 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
         match ($comment->status) {
             Comment::STATUS_APPROVED => session()->push('alert', ['success', trans('vgcomment::comment.store_success')]),
             Comment::STATUS_PENDING => session()->push('alert', ['alert', trans('vgcomment::comment.store_pending')]),
-            Comment::STATUS_SPAM => session()->push('alert', ['error', trans('vgcomment::comment.store_success')]),
-            Comment::STATUS_TRASH => session()->push('alert', ['error', trans('vgcomment::comment.store_success')]),
+            Comment::STATUS_SPAM => session()->push('alert', ['error', trans('vgcomment::comment.store_spam')]),
+            Comment::STATUS_TRASH => session()->push('alert', ['error', trans('vgcomment::comment.store_trash')]),
         };
     }
 
