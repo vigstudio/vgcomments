@@ -75,18 +75,19 @@ class ValidatorService
                     'required_with:root_id',
                     "exists:$table,id",
                 ],
-                'author_name' => [
+                'author_name' => array_values(array_filter([
                     Rule::requiredIf(! $auth && $allowGuest),
-                    'nullable',
                     'string',
                     'max:100',
-                ],
-                'author_email' => [
+                    // Keep optional when authenticated (value comes from the user model).
+                    $auth || ! $allowGuest ? 'nullable' : null,
+                ])),
+                'author_email' => array_values(array_filter([
                     Rule::requiredIf(! $auth && $allowGuest),
-                    'nullable',
                     'email:rfc',
                     'max:255',
-                ],
+                    $auth || ! $allowGuest ? 'nullable' : null,
+                ])),
                 'author_url' => [
                     'nullable',
                     'url',
