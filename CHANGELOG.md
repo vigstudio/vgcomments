@@ -2,6 +2,10 @@
 
 All notable changes to `vgcomments` will be documented in this file
 
+## 2.0.7 - 2026-08-04
+
+- Harden `registerFilesForComment` to skip attachment entries missing a UUID (avoids undefined-array-key 500s from malformed Livewire payloads)
+
 ## 2.0.6 - 2026-08-04
 
 - Evaluate `moderation_users` at Gate check-time (not boot-time) so moderators auto-approve reliably

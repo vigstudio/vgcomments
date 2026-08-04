@@ -86,7 +86,13 @@ class FileReposirory extends EloquentReposirory implements FileInterface
             }
 
             foreach ($files as $file) {
-                $fileData = $this->findByUuid($file['uuid']);
+                $uuid = is_array($file) ? ($file['uuid'] ?? null) : null;
+
+                if (! is_string($uuid) || $uuid === '') {
+                    continue;
+                }
+
+                $fileData = $this->findByUuid($uuid);
 
                 if ($fileData) {
                     $fileData->update([
