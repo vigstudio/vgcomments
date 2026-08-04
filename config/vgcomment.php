@@ -80,8 +80,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Allowed reaction types
+    | Suggested quick-reaction types (UI hints only)
     |--------------------------------------------------------------------------
+    |
+    | The API accepts any unicode emoji string up to 32 characters.
+    | This list is used as optional quick suggestions in the UI when useful.
+    |
     */
     'reaction_types' => ['👍', '❤️', '😄', '😮', '😢', '😡'],
 

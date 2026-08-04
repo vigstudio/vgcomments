@@ -61,6 +61,10 @@ class Comment extends BaseModel
         return $this->morphTo();
     }
 
+    /**
+     * All replies in the thread (same root_id). Loaded flat for one query;
+     * call nestReplies() to rebuild parent_id hierarchy for display.
+     */
     public function replies(): hasMany
     {
         return $this->hasMany(static::class, 'root_id')->with([
@@ -76,11 +80,58 @@ class Comment extends BaseModel
             'responder' => function ($query) {
                 return $query->cacheTags(['vigcomment_reaction_responder_' . $this->uuid]);
             },
-            'replies' => function ($query) {
-                return $query->where('status', Comment::STATUS_APPROVED)
-                            ->cacheTags(['vigcomment_reaction_replies_' . $this->uuid]);
-            },
         ]);
+    }
+
+    /**
+     * Nest flat root_id replies into a parent_id tree for recursive .vg-thread rendering.
+     * Safe to call multiple times; no-ops when already nested or only direct children exist.
+     */
+    public function nestReplies(): self
+    {
+        if (! $this->relationLoaded('replies')) {
+            return $this;
+        }
+
+        $flat = $this->replies;
+
+        if ($flat->isEmpty()) {
+            return $this;
+        }
+
+        $rootId = (int) $this->id;
+        $needsNesting = $flat->contains(fn ($reply) => (int) $reply->parent_id !== $rootId);
+
+        if (! $needsNesting) {
+            // Direct children only (or already nested) — ensure empty child reply relations exist.
+            $flat->each(function (self $reply) {
+                if (! $reply->relationLoaded('replies')) {
+                    $reply->setRelation('replies', $reply->newCollection());
+                }
+            });
+
+            return $this;
+        }
+
+        $this->setRelation('replies', static::buildReplyTree($flat, $rootId));
+
+        return $this;
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, self>  $flat
+     * @return \Illuminate\Support\Collection<int, self>
+     */
+    public static function buildReplyTree($flat, int $parentId)
+    {
+        return $flat
+            ->filter(fn (self $reply) => (int) $reply->parent_id === $parentId)
+            ->values()
+            ->map(function (self $reply) use ($flat) {
+                $reply->setRelation('replies', static::buildReplyTree($flat, (int) $reply->id));
+
+                return $reply;
+            });
     }
 
     public function parent(): hasOne
@@ -139,7 +190,16 @@ class Comment extends BaseModel
 
     public function getContentHtmlAttribute()
     {
-        return FormatterFacade::render($this->attributes['content']);
+        $xml = (string) ($this->attributes['content'] ?? '');
+        $html = FormatterFacade::render($xml);
+
+        // Re-parse stored XML when emphasis markers were left literal
+        // (e.g. older comments with `**bold **` trailing-space typos).
+        if ($html !== '' && preg_match('/\*\*|~~/', $html)) {
+            $html = FormatterFacade::render(FormatterFacade::parse(FormatterFacade::unparse($xml)));
+        }
+
+        return $html;
     }
 
     public function getUrlAttribute()

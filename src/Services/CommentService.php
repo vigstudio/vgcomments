@@ -7,12 +7,13 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 use Vigstudio\VgComment\Http\Resources\CommentResource;
 use Vigstudio\VgComment\Http\Resources\FileResource;
 use Vigstudio\VgComment\Http\Traits\CommentValidator;
 use Vigstudio\VgComment\Http\Traits\ThrottlesPosts;
 use Vigstudio\VgComment\Models\Comment;
+use Vigstudio\VgComment\Models\Reaction;
 use Vigstudio\VgComment\Repositories\Interface\CommentInterface;
 use Vigstudio\VgComment\Repositories\Interface\FileInterface;
 use Vigstudio\VgComment\Repositories\Interface\ReactionInterface;
@@ -56,6 +57,8 @@ class CommentService
         $comments = $this->commentRepository
             ->getComments($req)
             ->paginate(10, ['*'], 'vgcomment_page');
+
+        $comments->getCollection()->each(fn (Comment $comment) => $comment->nestReplies());
 
         if ($jsonResource) {
             return CommentResource::collection($comments);
@@ -248,15 +251,31 @@ class CommentService
 
         $comment = $this->commentRepository->findByUuid($uuid);
 
-        if (! $comment || ! $this->getAuth()) {
+        if (! $comment) {
             session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
 
             return false;
         }
 
-        $this->getAuth()->react($comment, $type);
+        $auth = $this->getAuth();
 
-        return true;
+        if ($auth) {
+            $auth->react($comment, $type);
+            $this->flushReactionCaches($comment);
+
+            return true;
+        }
+
+        if (! ($this->config['allow_guests'] ?? false)) {
+            session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
+
+            return false;
+        }
+
+        $ok = $this->guestReact($comment, $type);
+        $this->flushReactionCaches($comment);
+
+        return $ok;
     }
 
     public function deleteReaction(string $uuid, string $type): bool
@@ -265,15 +284,120 @@ class CommentService
 
         $comment = $this->commentRepository->findByUuid($uuid);
 
-        if (! $comment || ! $this->getAuth()) {
+        if (! $comment) {
             session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
 
             return false;
         }
 
-        $this->getAuth()->unReact($comment, $type);
+        $auth = $this->getAuth();
+
+        if ($auth) {
+            $auth->unReact($comment, $type);
+            $this->flushReactionCaches($comment);
+
+            return true;
+        }
+
+        if (! ($this->config['allow_guests'] ?? false)) {
+            session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
+
+            return false;
+        }
+
+        $ok = $this->guestUnReact($comment, $type);
+        $this->flushReactionCaches($comment);
+
+        return $ok;
+    }
+
+    protected function flushReactionCaches(?Comment $comment = null): void
+    {
+        Comment::flushQueryCache();
+        Reaction::flushQueryCache();
+
+        if (! $comment) {
+            return;
+        }
+
+        $hash = vgcomment_page_hash(
+            $comment->page_id,
+            $comment->commentable_id,
+            $comment->commentable_type
+        );
+
+        $tags = [
+            'vigcomment_reaction_releation_' . $hash,
+            'vigcomment_reaction_parent_' . $hash,
+            'vigcomment_reaction_files_' . $hash,
+            'vigcomment_reaction_responder_' . $hash,
+            'vigcomment_reaction_replies_' . $hash,
+        ];
+
+        Comment::flushQueryCache($tags);
+        Reaction::flushQueryCache($tags);
+    }
+
+    protected function guestReact(Comment $comment, string $type): bool
+    {
+        [$reactableType, $reactableId] = $this->guestReactorIdentity();
+
+        $existing = Reaction::query()
+            ->where('comment_uuid', $comment->getUuid())
+            ->where('reactable_type', $reactableType)
+            ->where('reactable_id', $reactableId)
+            ->first();
+
+        if ($existing && $existing->type === $type) {
+            return true;
+        }
+
+        if ($existing) {
+            $existing->delete();
+        }
+
+        Reaction::query()->create([
+            'comment_id' => $comment->getKey(),
+            'comment_uuid' => $comment->getUuid(),
+            'type' => $type,
+            'reactable_type' => $reactableType,
+            'reactable_id' => $reactableId,
+        ]);
 
         return true;
+    }
+
+    protected function guestUnReact(Comment $comment, string $type): bool
+    {
+        [$reactableType, $reactableId] = $this->guestReactorIdentity();
+
+        $existing = Reaction::query()
+            ->where('comment_uuid', $comment->getUuid())
+            ->where('reactable_type', $reactableType)
+            ->where('reactable_id', $reactableId)
+            ->where('type', $type)
+            ->first();
+
+        if (! $existing) {
+            return false;
+        }
+
+        return (bool) $existing->delete();
+    }
+
+    /**
+     * @return array{0: string, 1: int}
+     */
+    protected function guestReactorIdentity(): array
+    {
+        $token = session()->get('vgcomment.guest_reactor');
+
+        if (! is_string($token) || $token === '') {
+            $token = (string) Str::uuid();
+            session()->put('vgcomment.guest_reactor', $token);
+        }
+
+        return ['vgcomment_guest', (int) sprintf('%u', crc32($token))];
     }
 
     public function report(string $uuid): bool
@@ -303,10 +427,10 @@ class CommentService
 
     protected function assertReactionType(string $type): void
     {
-        $allowed = $this->config['reaction_types'] ?? ['👍', '❤️', '😄', '😮', '😢', '😡'];
-
+        // Any unicode emoji / ZWJ sequence that fits the string column (max 32).
+        // config('vgcomment.reaction_types') is only a UI quick-suggestion list.
         validator(['type' => $type], [
-            'type' => ['required', 'string', Rule::in($allowed)],
+            'type' => ['required', 'string', 'min:1', 'max:32'],
         ])->validate();
     }
 

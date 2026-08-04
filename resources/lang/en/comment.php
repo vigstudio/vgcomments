@@ -20,6 +20,8 @@ return [
     'edit' => 'Edit',
     'delete' => 'Delete',
     'report' => 'Report',
+    'add_reaction' => 'Add reaction',
+    'more_actions' => 'More actions',
     'submit' => 'Submit',
     'cancel' => 'Cancel',
     'delete_confirm' => 'Do you want to delete this comment?',

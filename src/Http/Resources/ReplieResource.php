@@ -30,6 +30,9 @@ class ReplieResource extends JsonResource
                 'uuid' => $this->parent->uuid,
                 'author_name' => $this->parent->author_name,
             ] : null,
+            'replies' => $this->relationLoaded('replies')
+                ? self::collection($this->replies)->toArray($request)
+                : [],
             'files' => FileResource::collection($this->files)->toArray($request),
             'reactions' => ReactionResource::collection($this->reactions)->toArray($request),
         ];

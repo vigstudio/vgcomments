@@ -37,10 +37,20 @@ class Reaction extends BaseModel
     {
         $auth = GetAuthenticatableService::get();
 
-        if ($auth === false) {
+        if ($auth !== false) {
+            return $this->reactable_type === get_class($auth)
+                && (string) $this->reactable_id === (string) $auth->getAuthIdentifier();
+        }
+
+        $token = session()->get('vgcomment.guest_reactor');
+
+        if (! is_string($token) || $token === '') {
             return false;
         }
 
-        return $this->reactable_type === get_class($auth) && $this->reactable_id === $auth->getAuthIdentifier();
+        $guestId = (int) sprintf('%u', crc32($token));
+
+        return $this->reactable_type === 'vgcomment_guest'
+            && (int) $this->reactable_id === $guestId;
     }
 }

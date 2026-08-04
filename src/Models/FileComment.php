@@ -4,6 +4,7 @@ namespace Vigstudio\VgComment\Models;
 
 use Illuminate\Database\Eloquent\Relations\hasOne;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class FileComment extends BaseModel
 {
@@ -34,6 +35,12 @@ class FileComment extends BaseModel
     public function getUrlStreamAttribute(): string
     {
         return route('vgcomments.files.stream', [$this->getUuid(), pathinfo($this->path, PATHINFO_EXTENSION)]);
+    }
+
+    public function isImage(): bool
+    {
+        return ($this->mime ?? Str::before((string) $this->mime_type, '/')) === 'image'
+            || str_starts_with((string) $this->mime_type, 'image/');
     }
 
     public function toResponse(): mixed

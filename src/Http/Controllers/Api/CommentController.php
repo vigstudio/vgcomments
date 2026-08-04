@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 use Vigstudio\VgComment\Facades\CommentServiceFacade;
+use Vigstudio\VgComment\Facades\FormatterFacade;
 use Vigstudio\VgComment\Http\Resources\CommentResource;
 use Vigstudio\VgComment\Http\Resources\FileResource;
 use Vigstudio\VgComment\Services\ValidatorService;
@@ -64,9 +65,12 @@ class CommentController extends Controller
             CommentServiceFacade::registerFilesForComment($comment, $request->input('attachments', []));
         }
 
+        $comment->load(['replies', 'files', 'reactions', 'responder', 'parent']);
+        $comment->nestReplies();
+
         return response()->json([
             'message' => trans('vgcomment::comment.store_success'),
-            'data' => new CommentResource($comment->load(['replies', 'files', 'reactions', 'responder', 'parent'])),
+            'data' => new CommentResource($comment),
         ], 201);
     }
 
@@ -104,7 +108,7 @@ class CommentController extends Controller
     public function react(Request $request, string $uuid): JsonResponse
     {
         $request->validate([
-            'type' => ['required', 'string', Rule::in(config('vgcomment.reaction_types', ['👍', '❤️', '😄', '😮', '😢', '😡']))],
+            'type' => ['required', 'string', 'min:1', 'max:32'],
         ]);
 
         $ok = CommentServiceFacade::reaction($uuid, $request->input('type'));
@@ -119,7 +123,7 @@ class CommentController extends Controller
     public function unreact(Request $request, string $uuid): JsonResponse
     {
         $request->validate([
-            'type' => ['required', 'string', Rule::in(config('vgcomment.reaction_types', ['👍', '❤️', '😄', '😮', '😢', '😡']))],
+            'type' => ['required', 'string', 'min:1', 'max:32'],
         ]);
 
         $ok = CommentServiceFacade::deleteReaction($uuid, $request->input('type'));
@@ -141,6 +145,17 @@ class CommentController extends Controller
 
         return response()->json([
             'message' => trans('vgcomment::comment.report_success'),
+        ]);
+    }
+
+    public function preview(Request $request): JsonResponse
+    {
+        $content = (string) $request->input('content', '');
+        $parsed = FormatterFacade::parse($content);
+        $html = FormatterFacade::render($parsed) ?: '';
+
+        return response()->json([
+            'html' => $html,
         ]);
     }
 

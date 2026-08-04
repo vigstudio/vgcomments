@@ -39,7 +39,60 @@ class CommentFormatter implements CommentFormatterInterface
 
     public function parse(string $text): string
     {
-        return $this->getParser()->parse($text);
+        return $this->getParser()->parse($this->normalizeEmphasis($text));
+    }
+
+    /**
+     * Soft-normalize emphasis markers so common typos like `**bold **` still bold.
+     * Does not touch fenced/code spans (content between backticks is skipped).
+     */
+    protected function normalizeEmphasis(string $text): string
+    {
+        $parts = preg_split('#(`+)#', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts === false || count($parts) === 1) {
+            return $this->normalizeEmphasisChunk($text);
+        }
+
+        $out = '';
+        $inCode = false;
+        $fence = '';
+
+        foreach ($parts as $part) {
+            if ($part !== '' && preg_match('/^`+$/', $part)) {
+                if (! $inCode) {
+                    $inCode = true;
+                    $fence = $part;
+                } elseif ($part === $fence) {
+                    $inCode = false;
+                    $fence = '';
+                }
+                $out .= $part;
+                continue;
+            }
+
+            $out .= $inCode ? $part : $this->normalizeEmphasisChunk($part);
+        }
+
+        return $out;
+    }
+
+    protected function normalizeEmphasisChunk(string $text): string
+    {
+        $replacements = [
+            '/\*\*\s+(.+?)\s+\*\*/us' => '**$1**',
+            '/\*\*\s+(.+?)\*\*/us' => '**$1**',
+            '/\*\*(.+?)\s+\*\*/us' => '**$1**',
+            '/(?<!\*)\*\s+([^*\n]+?)\s+\*(?!\*)/us' => '*$1*',
+            '/~~\s+(.+?)\s+~~/us' => '~~$1~~',
+            '/~~\s+(.+?)~~/us' => '~~$1~~',
+            '/~~(.+?)\s+~~/us' => '~~$1~~',
+        ];
+
+        foreach ($replacements as $pattern => $replacement) {
+            $text = preg_replace($pattern, $replacement, $text) ?? $text;
+        }
+
+        return $text;
     }
 
     public function unparse(string $xml): string
