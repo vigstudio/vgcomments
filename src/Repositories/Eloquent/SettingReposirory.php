@@ -39,21 +39,22 @@ class SettingReposirory extends EloquentReposirory implements SettingInterface
 
     public function get(string $key): mixed
     {
-        $value = $this->getCache($key);
+        $cache = app(CacheInterface::class);
+        $cacheKey = $this->key($key);
 
-        if ($value) {
-            return $value;
+        if ($cache->has($cacheKey)) {
+            return $cache->get($cacheKey);
         }
 
-        $value = $this->query()->where('key', $key)->first();
+        $row = $this->query()->where('key', $key)->first();
 
-        if ($value) {
-            $this->rememberCache($key, $value->value);
+        if ($row) {
+            $this->rememberCache($key, $row->value);
 
-            return $value->value;
+            return $row->value;
         }
 
-        return $this->config[$key];
+        return $this->config[$key] ?? null;
     }
 
     public function forget(string $key): bool

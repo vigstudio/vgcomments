@@ -14,6 +14,6 @@ class Setting extends BaseModel
     ];
 
     protected $casts = [
-        'value' => 'array',
+        'value' => 'json',
     ];
 }
