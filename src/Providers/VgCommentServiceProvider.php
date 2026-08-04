@@ -12,7 +12,6 @@ use Vigstudio\VgComment\Services\GetAuthenticatableService;
 use Vigstudio\VgComment\Facades\MacroableFacades;
 use Vigstudio\VgComment\Policies\CommentPolicy;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Vigstudio\VgComment\Repositories\Interface\SettingInterface;
 
@@ -146,16 +145,28 @@ class VgCommentServiceProvider extends ServiceProvider
     {
         Gate::policy(Comment::class, CommentPolicy::class);
 
-        $moderationUsers = Config::get('vgcomment.moderation_users');
+        // Read moderation_users at check-time (not boot-time) so config/env
+        // updates apply without relying on a stale closure capture.
+        Gate::define('vgcomment-moderate', function ($user) {
+            $moderationUsers = Config::get('vgcomment.moderation_users') ?? [];
 
-        if ($moderationUsers == null) {
-            $moderationUsers = [];
-        }
+            foreach ($moderationUsers as $guard => $ids) {
+                if (! is_array($ids) || $ids === []) {
+                    continue;
+                }
 
-        Gate::define('vgcomment-moderate', function ($user) use ($moderationUsers) {
-            foreach ($moderationUsers as $key => $moderationUser) {
-                if (Auth::guard($key)->check()) {
-                    return in_array($user->id, $moderationUser);
+                $provider = config("auth.guards.{$guard}.provider");
+                $model = $provider ? config("auth.providers.{$provider}.model") : null;
+
+                if ($model && ! is_a($user, $model)) {
+                    continue;
+                }
+
+                $userId = $user->getAuthIdentifier();
+                $normalized = array_map(static fn ($id) => is_numeric($id) ? (int) $id : $id, $ids);
+
+                if (in_array($userId, $ids, false) || in_array((int) $userId, $normalized, true)) {
+                    return true;
                 }
             }
 
