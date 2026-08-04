@@ -199,9 +199,9 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
     protected function orderComment(Builder $query, string|null $order): void
     {
         match ($order) {
-            'latest' => $query->orderBy('created_at', 'desc'),
             'oldest' => $query->orderBy('created_at', 'asc'),
             'popular' => $query->orderBy('point', 'desc'),
+            default => $query->orderBy('created_at', 'desc'),
         };
     }
 
