@@ -12,11 +12,11 @@
     "homepage": "https://github.com/vigstudio/vgcomment",
     "license": "MIT",
     "type": "laravel-library",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "authors": [
         {
             "name": "Viet Nghia",
-            "email": "vingadev@gmail.com",
+            "email": "vingamagic@gmail.com",
             "role": "Developer"
         }
     ],

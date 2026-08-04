@@ -23,21 +23,21 @@ class CommentController extends Controller
             'vgcomment_page' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $comments = CommentServiceFacade::get($request->only([
+        $filters = $this->normalizeCommentFilters($request->only([
             'page_id',
             'commentable_type',
             'commentable_id',
             'order',
         ]));
 
-        return response()->json($comments);
+        $comments = CommentServiceFacade::get($filters);
+
+        return $comments->response();
     }
 
     public function store(Request $request, ValidatorService $validatorService): JsonResponse
     {
-        $validatorService->storeCommentValidator($request)->validate();
-
-        $comment = CommentServiceFacade::store($request->only([
+        $payload = $this->normalizeCommentFilters($request->only([
             'content',
             'page_id',
             'commentable_type',
@@ -49,6 +49,12 @@ class CommentController extends Controller
             'parent_id',
             'recaptcha_token',
         ]));
+
+        $request->merge($payload);
+
+        $validatorService->storeCommentValidator($request)->validate();
+
+        $comment = CommentServiceFacade::store($payload);
 
         if (! $comment) {
             return $this->alertErrorResponse(422);
@@ -170,5 +176,23 @@ class CommentController extends Controller
                 'message' => $alert[1] ?? '',
             ])->values(),
         ], $status);
+    }
+
+    /**
+     * Drop blank morph / id keys so filters and validation stay consistent.
+     */
+    protected function normalizeCommentFilters(array $payload): array
+    {
+        foreach (['commentable_id', 'commentable_type', 'root_id', 'parent_id', 'page_id', 'author_url'] as $key) {
+            if (! array_key_exists($key, $payload)) {
+                continue;
+            }
+
+            if ($payload[$key] === '' || $payload[$key] === 'null' || $payload[$key] === null) {
+                unset($payload[$key]);
+            }
+        }
+
+        return $payload;
     }
 }

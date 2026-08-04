@@ -198,6 +198,8 @@ class CommentService
         $input = collect($req)->only('content')->all();
         $result = $comment->update($input);
 
+        Comment::flushQueryCache();
+
         session()->push('alert', ['success', trans('vgcomment::comment.update_success')]);
 
         return (bool) $result;
@@ -214,6 +216,8 @@ class CommentService
         }
 
         $result = $this->commentRepository->delete($comment->id);
+
+        Comment::flushQueryCache();
 
         session()->push('alert', ['success', trans('vgcomment::comment.delete_success')]);
 

@@ -67,7 +67,9 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
     {
         $request = $this->makeRequest($req);
 
+        // Comment lists must stay fresh after create/update; query cache was serving empty pages.
         $query = $this->query()
+                        ->dontCache()
                         ->with($this->withRelations($req))
                         ->whereNull('parent_id');
 
@@ -280,6 +282,12 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
             'author_email',
             'permalink',
         ]);
+
+        foreach (['commentable_type', 'commentable_id', 'root_id', 'parent_id', 'page_id', 'author_url'] as $key) {
+            if (($input[$key] ?? null) === '' || ($input[$key] ?? null) === 'null') {
+                $input[$key] = null;
+            }
+        }
 
         return $input;
     }

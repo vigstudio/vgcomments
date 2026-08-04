@@ -67,6 +67,16 @@ abstract class EloquentReposirory implements EloquentInterface
 
     protected function makeRequest(array $request): Request
     {
+        foreach (['commentable_id', 'commentable_type', 'root_id', 'parent_id', 'page_id'] as $key) {
+            if (! array_key_exists($key, $request)) {
+                continue;
+            }
+
+            if ($request[$key] === '' || $request[$key] === 'null') {
+                $request[$key] = null;
+            }
+        }
+
         return new Request($request);
     }
 }
