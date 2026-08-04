@@ -107,7 +107,7 @@ class ValidatorService
                 $validator->errors()->add('content', trans('vgcomment::validation.errors.not_authorized'));
             }
 
-            if ($this->hasDupicate($request->all())) {
+            if (is_string($request->input('content')) && $request->filled('content') && $this->hasDupicate($request->all())) {
                 $validator->errors()->add('content', trans('vgcomment::validation.errors.content_duplicate'));
             }
 
@@ -139,7 +139,7 @@ class ValidatorService
                 'content' => trans('vgcomment::validation.attributes.content'),
             ]
         )->after(function ($validator) use ($request) {
-            if ($this->hasDupicate($request->all())) {
+            if (is_string($request->input('content')) && $request->filled('content') && $this->hasDupicate($request->all())) {
                 $validator->errors()->add('content', trans('vgcomment::validation.errors.content_duplicate'));
             }
         });

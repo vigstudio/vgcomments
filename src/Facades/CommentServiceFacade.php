@@ -7,7 +7,12 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @method static \Illuminate\Contracts\Auth\Authenticatable|bool getAuth()
  * @method static \Illuminate\Http\Resources\Json\JsonResource|\Illuminate\Pagination\LengthAwarePaginator get(array $req = [], bool $jsonResource = true)
- * @method static \Illuminate\Http\Resources\Json\JsonResource getAdmin(array $req = [], bool $jsonResource = true)
+ * @method static \Illuminate\Http\Resources\Json\JsonResource|\Illuminate\Pagination\LengthAwarePaginator getAdmin(array $req = [], bool $jsonResource = false)
+ * @method static array getAdminStatusCounts()
+ * @method static int bulkUpdateStatus(array $ids, string $status)
+ * @method static int bulkDelete(array $ids)
+ * @method static int bulkRestore(array $ids)
+ * @method static int bulkForceDelete(array $ids)
  * @method static \Illuminate\Http\Resources\Json\JsonResource findById(int $id)
  * @method static \Illuminate\Http\Resources\Json\JsonResource store(array $req)
  * @method static bool update(array $req, string $uuid)

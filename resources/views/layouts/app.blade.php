@@ -1,121 +1,119 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <title>VgComment - Admin</title>
-
-    <!-- Fonts -->
-    <link rel="stylesheet" href="https://fonts.bunny.net/css2?family=Nunito:wght@400;600;700&display=swap">
-
-    <link href="{{ asset('vendor/vgcomments/css/style.css') }}" rel="stylesheet">
+    <title>@yield('title', 'VgComments Admin')</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+    <link href="{{ asset('vendor/vgcomments/css/style.css') }}?v={{ @filemtime(public_path('vendor/vgcomments/css/style.css')) ?: time() }}" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 </head>
+<body class="admin-shell h-full font-sans antialiased" style="font-family: Figtree, ui-sans-serif, system-ui, sans-serif;">
+<div
+    class="min-h-full"
+    x-data="{
+        sidebarOpen: false,
+        toast: @js(session('success') ? ['type' => 'success', 'message' => session('success')] : (session('error') ? ['type' => 'error', 'message' => session('error')] : null)),
+        init() {
+            if (this.toast) {
+                setTimeout(() => this.toast = null, 4200);
+            }
+        }
+    }"
+>
+    <div
+        x-show="sidebarOpen"
+        x-cloak
+        class="admin-overlay"
+        @click="sidebarOpen = false"
+    ></div>
 
-<body class="font-sans antialiased">
-    <!--
-  This example requires updating your template:
-
-  ```
-  <html class="h-full">
-  <body class="h-full">
-  ```
--->
-    <div class="min-h-full">
-        <nav class="border-b border-gray-200 bg-white">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="flex h-16 justify-between">
-                    <div class="flex">
-                        <div class="flex flex-shrink-0 items-center">
-                            <img class="block h-8 w-auto lg:hidden" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company">
-                            <img class="hidden h-8 w-auto lg:block" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company">
-                        </div>
-                        <div class="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-                            <a href="{{ route('vgcomments.admin.dashboard') }}" @class([
-                                'border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium' => request()->routeIs(
-                                    'vgcomments.admin.dashboard'
-                                ),
-                                'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium' => !request()->routeIs(
-                                    'vgcomments.admin.dashboard'
-                                ),
-                            ])>Dashboard</a>
-
-                            <a href="{{ route('vgcomments.admin.setting') }}" @class([
-                                'border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium' => request()->routeIs(
-                                    'vgcomments.admin.setting'
-                                ),
-                                'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium' => !request()->routeIs(
-                                    'vgcomments.admin.setting'
-                                ),
-                            ])>Setting</a>
-
-                        </div>
-                    </div>
-
-                    <div class="-mr-2 flex items-center sm:hidden">
-                        <!-- Mobile menu button -->
-                        <button type="button" class="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" aria-controls="mobile-menu" aria-expanded="false">
-                            <span class="sr-only">Open main menu</span>
-
-                            <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                            </svg>
-
-                            <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
+    <aside
+        class="admin-sidebar -translate-x-full lg:translate-x-0"
+        :class="{ 'translate-x-0': sidebarOpen }"
+    >
+        <div class="admin-sidebar__brand">
+            <span class="admin-sidebar__logo">VG</span>
+            <div>
+                <p class="admin-sidebar__title">VgComments</p>
+                <p class="admin-sidebar__subtitle">Moderation</p>
             </div>
+        </div>
 
-            <!-- Mobile menu, show/hide based on menu state. -->
-            <div class="sm:hidden" id="mobile-menu">
-                <div class="space-y-1 pt-2 pb-3">
-                    <a href="{{ route('vgcomments.admin.dashboard') }}"
-                       @class([
-                           'bg-indigo-50 border-indigo-500 text-indigo-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium' => request()->routeIs(
-                               'vgcomments.admin.dashboard'
-                           ),
-                           'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium' => !request()->routeIs(
-                               'vgcomments.admin.dashboard'
-                           ),
-                       ])>Dashboard</a>
-
-                    <a href="{{ route('vgcomments.admin.setting') }}" @class([
-                        'bg-indigo-50 border-indigo-500 text-indigo-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium' => request()->routeIs(
-                            'vgcomments.admin.setting'
-                        ),
-                        'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium' => !request()->routeIs(
-                            'vgcomments.admin.setting'
-                        ),
-                    ])>Setting</a>
-
-                </div>
-
-            </div>
+        <nav class="admin-sidebar__nav">
+            <a
+                href="{{ route('vgcomments.admin.dashboard') }}"
+                @class([
+                    'admin-nav-link' => true,
+                    'admin-nav-link--active' => request()->routeIs('vgcomments.admin.dashboard'),
+                ])
+            >
+                <span>{{ __('vgcomment::admin.comments') }}</span>
+            </a>
+            <a
+                href="{{ route('vgcomments.admin.setting') }}"
+                @class([
+                    'admin-nav-link' => true,
+                    'admin-nav-link--active' => request()->routeIs('vgcomments.admin.setting*'),
+                ])
+            >
+                <span>{{ __('vgcomment::admin.setting') }}</span>
+            </a>
         </nav>
 
-        <div class="py-10">
-            @yield('content')
-
-
-
-
-
+        <div class="admin-sidebar__footer">
+            <a href="{{ url('/') }}">← {{ __('vgcomment::admin.back_to_site') }}</a>
         </div>
+    </aside>
+
+    <div class="lg:pl-64">
+        <header class="admin-topbar">
+            <div class="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center gap-3">
+                    <button
+                        type="button"
+                        class="inline-flex rounded-md border border-slate-300 bg-white p-2 text-slate-700 hover:bg-slate-50 lg:hidden"
+                        @click="sidebarOpen = true"
+                    >
+                        <span class="sr-only">Open sidebar</span>
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+                    </button>
+                    <div>
+                        <h1 class="text-lg font-semibold text-slate-900">@yield('heading', __('vgcomment::admin.dashboard'))</h1>
+                        <p class="hidden text-sm text-slate-600 sm:block">@yield('subheading', __('vgcomment::admin.dashboard_subtitle'))</p>
+                    </div>
+                </div>
+                <div class="text-sm font-medium text-slate-700">
+                    @auth
+                        {{ auth()->user()->name ?? auth()->user()->email ?? 'Moderator' }}
+                    @endauth
+                </div>
+            </div>
+        </header>
+
+        <main class="px-4 py-6 sm:px-6 lg:px-8">
+            @yield('content')
+        </main>
     </div>
 
+    <div
+        x-show="toast"
+        x-cloak
+        x-transition
+        class="pointer-events-none fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4 sm:inset-x-auto sm:right-6 sm:justify-end"
+    >
+        <div
+            class="pointer-events-auto max-w-sm rounded-lg border px-4 py-3 shadow-lg"
+            :class="toast?.type === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800'"
+        >
+            <p class="text-sm font-medium" x-text="toast?.message"></p>
+        </div>
+    </div>
+</div>
 
-
+<style>[x-cloak]{display:none!important}</style>
+<script src="{{ asset('vendor/vgcomments/js/app.js') }}?v={{ @filemtime(public_path('vendor/vgcomments/js/app.js')) ?: time() }}"></script>
 </body>
-
-<script>
-    window.prefix = "/{{ config('vgcomment.prefix') }}/admin";
-</script>
-<script src="//unpkg.com/alpinejs" defer></script>
-<script src="{{ asset('vendor/vgcomments/js/app.js') }}"></script>
-
 </html>

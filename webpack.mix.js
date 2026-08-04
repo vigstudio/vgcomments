@@ -14,7 +14,7 @@ const path = require('path');
 const tailwindcss = require('tailwindcss');
 const dist = 'vendor/vgcomments';
 
-mix.js('./resources/js/app.js', './public/js').vue();
+mix.js('./resources/js/app.js', './public/js');
 
 mix.sass('./resources/sass/style.scss', './public/css')
     .options({

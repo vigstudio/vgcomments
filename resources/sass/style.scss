@@ -2,18 +2,322 @@
 @tailwind components;
 @tailwind utilities;
 
-.btn {
-    @apply inline-flex items-center rounded border border-transparent bg-indigo-100 px-2.5 py-1.5 mx-1 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
-}
+@layer components {
+    .admin-shell {
+        @apply min-h-full bg-slate-100 text-slate-900;
+    }
 
-.btn-danger {
-    @apply inline-flex items-center rounded border border-transparent bg-red-600 px-2.5 py-1.5 mx-1 text-xs font-medium text-white hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
-}
+    .admin-sidebar {
+        @apply fixed inset-y-0 left-0 z-50 flex w-64 flex-col transition-transform duration-200;
+        background-color: #0b1220;
+        color: #f8fafc;
+        border-right: 1px solid #1e293b;
+    }
 
-.btn-orange {
-    @apply inline-flex items-center rounded border border-transparent text-white bg-[#FF9119] hover:bg-[#FF9119]/80 px-2.5 py-1.5 mx-1 text-xs font-medium  focus:outline-none focus:ring-2 focus:ring-[#FF9119]/50 focus:ring-offset-2;
-}
+    .admin-sidebar__brand {
+        @apply flex h-16 items-center gap-3 px-5;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
 
-.btn-success {
-    @apply inline-flex items-center rounded border border-transparent bg-green-600 px-2.5 py-1.5 mx-1 text-xs font-medium text-white hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-offset-2;
+    .admin-sidebar__logo {
+        @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold text-white;
+        background-color: #0284c7;
+    }
+
+    .admin-sidebar__title {
+        @apply text-sm font-semibold tracking-wide text-white;
+    }
+
+    .admin-sidebar__subtitle {
+        @apply text-xs;
+        color: #94a3b8;
+    }
+
+    .admin-sidebar__nav {
+        @apply flex-1 space-y-1 px-3 py-4;
+    }
+
+    .admin-sidebar__footer {
+        @apply px-4 py-4 text-xs;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        color: #94a3b8;
+    }
+
+    .admin-sidebar__footer a {
+        color: #cbd5e1;
+    }
+
+    .admin-sidebar__footer a:hover {
+        color: #ffffff;
+    }
+
+    .admin-nav-link {
+        @apply flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold;
+        color: #e2e8f0;
+    }
+
+    .admin-nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+    }
+
+    .admin-nav-link--active {
+        background-color: #0369a1;
+        color: #ffffff;
+    }
+
+    .admin-nav-link--active:hover {
+        background-color: #0284c7;
+        color: #ffffff;
+    }
+
+    .admin-topbar {
+        @apply sticky top-0 z-30 border-b border-slate-200;
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+    }
+
+    .admin-card {
+        @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+    }
+
+    .admin-stat {
+        @apply admin-card flex flex-col gap-1 px-4 py-3 transition;
+    }
+
+    .admin-stat:hover {
+        border-color: #7dd3fc;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    }
+
+    .admin-stat--active {
+        border-color: #0284c7;
+        box-shadow: 0 0 0 1px #bae6fd;
+    }
+
+    .admin-stat__label {
+        @apply text-xs font-semibold uppercase tracking-wide text-slate-500;
+    }
+
+    .admin-stat__value {
+        @apply text-2xl font-semibold text-slate-900;
+    }
+
+    .admin-badge {
+        @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold;
+    }
+
+    .admin-badge--approved {
+        @apply bg-emerald-100 text-emerald-800;
+    }
+
+    .admin-badge--pending {
+        @apply bg-amber-100 text-amber-800;
+    }
+
+    .admin-badge--spam {
+        @apply bg-red-100 text-red-800;
+    }
+
+    .admin-badge--trash {
+        @apply bg-slate-200 text-slate-700;
+    }
+
+    .btn {
+        @apply inline-flex items-center justify-center gap-1 rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+        background-color: #e0f2fe;
+        color: #075985;
+    }
+
+    .btn:hover {
+        background-color: #bae6fd;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-1 rounded-md border border-transparent px-3 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+        background-color: #0369a1;
+    }
+
+    .btn-primary:hover {
+        background-color: #0284c7;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-danger {
+        @apply inline-flex items-center justify-center gap-1 rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+        background-color: #dc2626;
+    }
+
+    .btn-danger:hover {
+        background-color: #ef4444;
+    }
+
+    .btn-success {
+        @apply inline-flex items-center justify-center gap-1 rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+        background-color: #059669;
+    }
+
+    .btn-success:hover {
+        background-color: #10b981;
+    }
+
+    .btn-orange {
+        @apply inline-flex items-center justify-center gap-1 rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+        background-color: #d97706;
+    }
+
+    .btn-orange:hover {
+        background-color: #f59e0b;
+    }
+
+    .admin-input {
+        @apply block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-sky-500 focus:ring-sky-500;
+    }
+
+    .admin-field {
+        @apply block w-full rounded-lg border-slate-300 bg-white text-sm text-slate-900 shadow-sm;
+        @apply focus:border-sky-500 focus:ring-sky-500;
+        min-height: 2.5rem;
+        padding: 0.55rem 0.8rem;
+    }
+
+    .admin-field--select {
+        @apply pr-10;
+    }
+
+    .admin-settings__tabs {
+        @apply overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm;
+    }
+
+    .admin-settings__tab {
+        @apply flex-1 px-4 py-3 text-sm font-semibold text-slate-600 transition;
+        border-bottom: 2px solid transparent;
+    }
+
+    .admin-settings__tab:hover {
+        @apply bg-slate-50 text-slate-900;
+    }
+
+    .admin-settings__tab--active {
+        @apply text-sky-800;
+        background-color: #f0f9ff;
+        border-bottom-color: #0284c7;
+    }
+
+    .admin-settings__panel {
+        @apply overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm;
+    }
+
+    .admin-settings__panel-head {
+        @apply border-b border-slate-200 px-5 py-4;
+        background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    }
+
+    .admin-settings__panel-head h2 {
+        @apply text-base font-semibold text-slate-900;
+    }
+
+    .admin-settings__panel-head p {
+        @apply mt-1 text-sm text-slate-600;
+    }
+
+    .admin-settings__fields {
+        @apply divide-y divide-slate-100;
+    }
+
+    .admin-settings__field {
+        @apply grid gap-4 px-5 py-5 sm:grid-cols-12 sm:items-start;
+    }
+
+    .admin-settings__meta {
+        @apply sm:col-span-5;
+    }
+
+    .admin-settings__meta label {
+        @apply block text-sm font-semibold text-slate-900;
+    }
+
+    .admin-settings__meta p {
+        @apply mt-1 text-sm leading-relaxed text-slate-600;
+    }
+
+    .admin-settings__control {
+        @apply sm:col-span-7;
+    }
+
+    .admin-settings__footer {
+        @apply sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-lg;
+    }
+
+    .admin-settings__footer p {
+        @apply text-sm text-slate-600;
+    }
+
+    .admin-tags__composer {
+        @apply flex gap-2;
+    }
+
+    .admin-tags__composer .admin-field {
+        @apply flex-1;
+    }
+
+    .admin-tags__error {
+        @apply mt-2 text-sm font-medium text-red-600;
+    }
+
+    .admin-tags__empty {
+        @apply mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-sm text-slate-500;
+    }
+
+    .admin-tags__list {
+        @apply mt-3 flex flex-wrap gap-2;
+    }
+
+    .admin-chip {
+        @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold;
+        background-color: #e0f2fe;
+        color: #075985;
+        border: 1px solid #7dd3fc;
+    }
+
+    .admin-chip__remove {
+        @apply inline-flex rounded-full p-0.5 text-sky-700 transition hover:bg-sky-200 hover:text-sky-900;
+    }
+
+    .admin-toggle {
+        @apply inline-flex cursor-pointer items-center gap-3 select-none;
+    }
+
+    .admin-toggle__track {
+        @apply relative inline-flex h-6 w-11 shrink-0 rounded-full transition;
+        background-color: #cbd5e1;
+    }
+
+    .admin-toggle__track--on {
+        background-color: #0284c7;
+    }
+
+    .admin-toggle__thumb {
+        @apply absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition;
+    }
+
+    .admin-toggle__track--on .admin-toggle__thumb {
+        transform: translateX(1.25rem);
+    }
+
+    .admin-toggle__label {
+        @apply text-sm font-semibold text-slate-800;
+    }
+
+    .admin-drawer {
+        @apply fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto border-l border-slate-200 bg-white shadow-xl;
+    }
+
+    .admin-overlay {
+        @apply fixed inset-0 z-40 lg:hidden;
+        background-color: rgba(15, 23, 42, 0.5);
+    }
 }

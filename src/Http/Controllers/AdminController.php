@@ -2,12 +2,14 @@
 
 namespace Vigstudio\VgComment\Http\Controllers;
 
-use Illuminate\Routing\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Vigstudio\VgComment\Facades\CommentServiceFacade;
-use Vigstudio\VgComment\Repositories\Interface\SettingInterface;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Validation\Rule;
+use Vigstudio\VgComment\Facades\CommentServiceFacade;
 use Vigstudio\VgComment\Models\Comment;
+use Vigstudio\VgComment\Repositories\Interface\SettingInterface;
 
 class AdminController extends Controller
 {
@@ -18,18 +20,60 @@ class AdminController extends Controller
 
     public function dashboard(Request $request)
     {
-        $comments = CommentServiceFacade::getAdmin($request->all());
-        $tabs = [
-            'all',
-            'pending',
-            'approved',
-            'spam',
-            'trash',
-            'reported',
-            'deleted',
+        $filters = [
+            'status' => $request->input('status', 'all'),
+            'q' => trim((string) $request->input('q', '')),
+            'page_id' => trim((string) $request->input('page_id', '')),
+            'from' => $request->input('from'),
+            'to' => $request->input('to'),
         ];
 
-        return view('vgcomment::dashboard', compact('comments', 'tabs'));
+        $comments = CommentServiceFacade::getAdmin($filters, false);
+        $counts = CommentServiceFacade::getAdminStatusCounts();
+
+        $tabs = collect(['all', 'pending', 'approved', 'spam', 'trash', 'reported', 'deleted'])
+            ->mapWithKeys(fn (string $key) => [
+                $key => [
+                    'key' => $key,
+                    'label' => __('vgcomment::admin.'.$key),
+                    'count' => $counts[$key] ?? 0,
+                ],
+            ])
+            ->all();
+
+        return view('vgcomment::dashboard', compact('comments', 'tabs', 'filters', 'counts'));
+    }
+
+    public function bulk(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+            'action' => ['required', 'string', Rule::in([
+                'approve',
+                'pending',
+                'spam',
+                'trash',
+                'delete',
+                'restore',
+                'force_delete',
+            ])],
+        ]);
+
+        $ids = $validated['ids'];
+        $action = $validated['action'];
+
+        $affected = match ($action) {
+            'approve' => CommentServiceFacade::bulkUpdateStatus($ids, Comment::STATUS_APPROVED),
+            'pending' => CommentServiceFacade::bulkUpdateStatus($ids, Comment::STATUS_PENDING),
+            'spam' => CommentServiceFacade::bulkUpdateStatus($ids, Comment::STATUS_SPAM),
+            'trash' => CommentServiceFacade::bulkUpdateStatus($ids, Comment::STATUS_TRASH),
+            'delete' => CommentServiceFacade::bulkDelete($ids),
+            'restore' => CommentServiceFacade::bulkRestore($ids),
+            'force_delete' => CommentServiceFacade::bulkForceDelete($ids),
+        };
+
+        return back()->with('success', trans('vgcomment::admin.bulk_success', ['count' => $affected]));
     }
 
     public function setting()
@@ -76,7 +120,6 @@ class AdminController extends Controller
                 'recaptcha_key' => $this->buildValue('string', 'recaptcha_key'),
                 'recaptcha_secret' => $this->buildValue('string', 'recaptcha_secret'),
             ],
-
         ];
 
         return view('vgcomment::setting', compact('config'));
@@ -84,90 +127,105 @@ class AdminController extends Controller
 
     public function updateSetting(Request $request, SettingInterface $settingRepository)
     {
+        $sanitizeList = static function (?array $items): array {
+            return collect($items ?? [])
+                ->map(fn ($item) => is_string($item) ? trim($item) : $item)
+                ->filter(fn ($item) => is_string($item) && $item !== '')
+                ->unique(fn ($item) => mb_strtolower($item))
+                ->values()
+                ->all();
+        };
+
+        $request->merge([
+            'censors_text' => $sanitizeList($request->input('censors_text')),
+            'moderation_keys' => $sanitizeList($request->input('moderation_keys')),
+            'blacklist_keys' => $sanitizeList($request->input('blacklist_keys')),
+            'upload_rules' => $sanitizeList($request->input('upload_rules')),
+        ]);
+
         $request->validate([
             'prefix' => 'required|string',
+            'broadcast' => 'required',
             'allow_guests' => 'required',
             'gravatar' => 'required',
             'gravatar_imageset' => 'required|string',
-            'min_length' => 'required|integer',
-            'max_length' => 'required|integer',
-            'throttle_max_rate' => 'required|integer',
-            'throttle_per_minutes' => 'required|integer',
+            'min_length' => 'required|integer|min:1',
+            'max_length' => 'required|integer|gte:min_length',
+            'throttle_max_rate' => 'required|integer|min:1',
+            'throttle_per_minutes' => 'required|integer|min:1',
             'moderation' => 'required',
-            'moderation_keys' => 'array',
-            'moderation_keys.*' => 'string',
-            'blacklist_keys' => 'array',
-            'blacklist_keys.*' => 'string',
+            'moderation_keys' => 'nullable|array',
+            'moderation_keys.*' => 'required|string|min:1|max:100',
+            'blacklist_keys' => 'nullable|array',
+            'blacklist_keys.*' => 'required|string|min:1|max:100',
             'censor' => 'required',
-            'censors_text' => 'array',
-            'censors_text.*' => 'string',
-            'max_links' => 'required|integer',
+            'censors_text' => 'nullable|array',
+            'censors_text.*' => 'required|string|min:1|max:100',
+            'max_links' => 'required|integer|min:0',
             'duplicates_check' => 'required',
             'report_status' => 'required|string',
-            'max_reports' => 'required|integer',
+            'max_reports' => 'required|integer|min:1',
             'disk_filesystem' => 'required|string',
-            'upload_rules' => 'required|array',
-            'upload_rules.*' => 'string',
-            'upload_rules_max' => 'required|integer',
+            'upload_rules' => 'nullable|array',
+            'upload_rules.*' => 'required|string|min:1|max:255',
+            'upload_rules_max' => 'required|integer|min:1',
             'user_column_name' => 'required|string',
             'user_column_email' => 'required|string',
             'user_column_url' => 'required|string',
             'user_column_avatar_url' => 'required|string',
             'nsfw' => 'required',
-            'nsfw_api_user' => 'string',
-            'nsfw_api_key' => 'string',
+            'nsfw_api_user' => 'nullable|string',
+            'nsfw_api_key' => 'nullable|string',
             'recaptcha' => 'required',
-            'recaptcha_key' => 'string',
-            'recaptcha_secret' => 'string',
-        ]);
-
-        $request->merge([
-            'censors_text' => $request->censors_text ?? [],
-            'moderation_keys' => $request->moderation_keys ?? [],
-            'blacklist_keys' => $request->blacklist_keys ?? [],
-            'upload_rules' => $request->upload_rules ?? [],
+            'recaptcha_key' => 'nullable|string',
+            'recaptcha_secret' => 'nullable|string',
         ]);
 
         $settingRepository->set($request);
 
-        return back()->with('success', 'Update success');
+        return back()->with('success', __('vgcomment::admin.settings_saved'));
     }
 
-    public function updateComment(Request $request, $id)
+    public function updateComment(Request $request, $id): RedirectResponse
     {
-        $comment = Comment::findOrFail($id);
+        $comment = Comment::withTrashed()->findOrFail($id);
 
         $validated = $request->validate([
-            'status' => 'required|string|in:'.implode(',', Comment::STATUSES),
+            'status' => 'nullable|string|in:'.implode(',', Comment::STATUSES),
             'content' => 'nullable|string|max:5000',
         ]);
 
-        $comment->update($validated);
+        $payload = array_filter($validated, fn ($value) => ! is_null($value) && $value !== '');
 
-        return back()->with('success', 'Update success');
+        if ($payload === []) {
+            return back()->with('error', __('vgcomment::admin.nothing_to_update'));
+        }
+
+        $comment->update($payload);
+
+        return back()->with('success', __('vgcomment::admin.comment_updated'));
     }
 
-    public function deleteComment($id)
+    public function deleteComment($id): RedirectResponse
     {
         $comment = Comment::findOrFail($id);
 
         $comment->replies()->delete();
         $comment->delete();
 
-        return back()->with('success', 'Update success');
+        return back()->with('success', __('vgcomment::admin.comment_deleted'));
     }
 
-    public function restoreComment($id)
+    public function restoreComment($id): RedirectResponse
     {
         $comment = Comment::onlyTrashed()->findOrFail($id);
         $comment->restore();
-
         $comment->replies()->onlyTrashed()->restore();
 
-        return back()->with('success', 'Update success');
+        return back()->with('success', __('vgcomment::admin.comment_restored'));
     }
 
-    public function forceDeleteComment($id)
+    public function forceDeleteComment($id): RedirectResponse
     {
         $comment = Comment::onlyTrashed()->findOrFail($id);
 
@@ -175,17 +233,26 @@ class AdminController extends Controller
         $comment->reactions()->forceDelete();
         $comment->reports()->forceDelete();
         $comment->files()->forceDelete();
-
         $comment->forceDelete();
 
-        return back()->with('success', 'Update success');
+        return back()->with('success', __('vgcomment::admin.comment_force_deleted'));
     }
 
-    protected function buildValue($type, $key, $options = null)
+    protected function buildValue($type, $key, $options = null): array
     {
+        $value = Config::get('vgcomment.'.$key) ?? '';
+
+        if ($type === 'array') {
+            $value = collect(is_array($value) ? $value : [])
+                ->map(fn ($item) => is_string($item) ? trim($item) : $item)
+                ->filter(fn ($item) => is_string($item) && $item !== '')
+                ->values()
+                ->all();
+        }
+
         return [
             'type' => $type,
-            'value' => Config::get('vgcomment.' . $key) ?? '',
+            'value' => $value,
             'options' => $options,
         ];
     }

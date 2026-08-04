@@ -14,6 +14,7 @@ Route::middleware('web')
             ->name('vgcomments.admin.')
             ->group(function () {
                 Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+                Route::post('comments/bulk', [AdminController::class, 'bulk'])->name('comments.bulk');
                 Route::put('comment/{id}/update', [AdminController::class, 'updateComment'])->name('comment.update');
                 Route::delete('comment/{id}/delete', [AdminController::class, 'deleteComment'])->name('comment.delete');
                 Route::put('comment/{id}/restore', [AdminController::class, 'restoreComment'])->name('comment.restore');

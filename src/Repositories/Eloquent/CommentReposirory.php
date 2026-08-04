@@ -95,33 +95,79 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
 
     public function getCommentsAdmin(array $req): Builder
     {
-        $request = $this->makeRequest($req);
+        $status = $req['status'] ?? 'all';
 
-        $query = $this->query()->with($this->withRelations($req));
+        $query = $this->query()
+            ->with(['responder'])
+            ->withCount('reports');
 
-        $query->when(! empty($req['status']), function ($query) use ($req) {
-            if (in_array($req['status'], Comment::STATUSES)) {
-                $query->where('status', $req['status']);
-            }
-            if ($req['status'] === 'deleted') {
-                return $query->onlyTrashed();
-            }
-            if ($req['status'] === 'reported') {
-                return $query->has('reports');
-            }
-        });
+        if ($status === 'deleted') {
+            $query->onlyTrashed();
+        } elseif ($status === 'reported') {
+            $query->has('reports');
+        } elseif ($status !== 'all' && in_array($status, Comment::STATUSES, true)) {
+            $query->where('status', $status);
+        }
 
-        return $query->orderBy('created_at', 'desc');
+        $search = trim((string) ($req['q'] ?? ''));
+        if ($search !== '') {
+            $like = '%'.$search.'%';
+            $query->where(function (Builder $builder) use ($like) {
+                $builder->where('author_name', 'like', $like)
+                    ->orWhere('author_email', 'like', $like)
+                    ->orWhere('author_ip', 'like', $like)
+                    ->orWhere('content', 'like', $like)
+                    ->orWhere('page_id', 'like', $like);
+            });
+        }
+
+        if (! empty($req['page_id'])) {
+            $query->where('page_id', $req['page_id']);
+        }
+
+        if (! empty($req['from'])) {
+            $query->whereDate('created_at', '>=', $req['from']);
+        }
+
+        if (! empty($req['to'])) {
+            $query->whereDate('created_at', '<=', $req['to']);
+        }
+
+        return $query->orderByDesc('created_at');
+    }
+
+    public function getAdminStatusCounts(): array
+    {
+        $byStatus = $this->query()
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status')
+            ->map(fn ($count) => (int) $count)
+            ->all();
+
+        return [
+            'all' => (int) array_sum($byStatus),
+            'pending' => $byStatus[Comment::STATUS_PENDING] ?? 0,
+            'approved' => $byStatus[Comment::STATUS_APPROVED] ?? 0,
+            'spam' => $byStatus[Comment::STATUS_SPAM] ?? 0,
+            'trash' => $byStatus[Comment::STATUS_TRASH] ?? 0,
+            'reported' => (int) $this->query()->has('reports')->count(),
+            'deleted' => (int) $this->query()->onlyTrashed()->count(),
+        ];
     }
 
     public function hasDupicate(array $request): bool
     {
+        if (! is_string($request['content'] ?? null) || $request['content'] === '') {
+            return false;
+        }
+
         $auth = $this->getAuth();
 
         $duplicate = $this->query()
             ->where('content', FormatterFacade::parse($request['content']))
-            ->where('commentable_id', $request['commentable_id'])
-            ->where('commentable_type', $request['commentable_type'])
+            ->where('commentable_id', $request['commentable_id'] ?? null)
+            ->where('commentable_type', $request['commentable_type'] ?? null)
             ->when($auth, function ($query) use ($auth) {
                 return $query->where('responder_id', $auth->getKey())->where('responder_type', get_class($auth));
             })

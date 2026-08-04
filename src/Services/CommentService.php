@@ -64,17 +64,108 @@ class CommentService
         return $comments;
     }
 
-    public function getAdmin(array $req = [], bool $jsonResource = true): JsonResource|LengthAwarePaginator
+    public function getAdmin(array $req = [], bool $jsonResource = false): JsonResource|LengthAwarePaginator
     {
         $comments = $this->commentRepository
             ->getCommentsAdmin($req)
-            ->paginate(10, ['*'], 'vgcomment_page');
+            ->paginate(20, ['*'], 'vgcomment_page')
+            ->withQueryString();
 
         if ($jsonResource) {
             return CommentResource::collection($comments);
         }
 
         return $comments;
+    }
+
+    public function getAdminStatusCounts(): array
+    {
+        return $this->commentRepository->getAdminStatusCounts();
+    }
+
+    public function bulkUpdateStatus(array $ids, string $status): int
+    {
+        if (! in_array($status, Comment::STATUSES, true)) {
+            return 0;
+        }
+
+        $ids = $this->normalizeIds($ids);
+
+        if ($ids === []) {
+            return 0;
+        }
+
+        return Comment::query()->whereIn('id', $ids)->update(['status' => $status]);
+    }
+
+    public function bulkDelete(array $ids): int
+    {
+        $ids = $this->normalizeIds($ids);
+
+        if ($ids === []) {
+            return 0;
+        }
+
+        $count = 0;
+
+        Comment::query()->whereIn('id', $ids)->each(function (Comment $comment) use (&$count) {
+            $comment->replies()->delete();
+            $comment->delete();
+            $count++;
+        });
+
+        return $count;
+    }
+
+    public function bulkRestore(array $ids): int
+    {
+        $ids = $this->normalizeIds($ids);
+
+        if ($ids === []) {
+            return 0;
+        }
+
+        $count = 0;
+
+        Comment::onlyTrashed()->whereIn('id', $ids)->each(function (Comment $comment) use (&$count) {
+            $comment->restore();
+            $comment->replies()->onlyTrashed()->restore();
+            $count++;
+        });
+
+        return $count;
+    }
+
+    public function bulkForceDelete(array $ids): int
+    {
+        $ids = $this->normalizeIds($ids);
+
+        if ($ids === []) {
+            return 0;
+        }
+
+        $count = 0;
+
+        Comment::onlyTrashed()->whereIn('id', $ids)->each(function (Comment $comment) use (&$count) {
+            $comment->replies()->withTrashed()->forceDelete();
+            $comment->reactions()->forceDelete();
+            $comment->reports()->forceDelete();
+            $comment->files()->forceDelete();
+            $comment->forceDelete();
+            $count++;
+        });
+
+        return $count;
+    }
+
+    protected function normalizeIds(array $ids): array
+    {
+        return collect($ids)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function findById(int $id): mixed

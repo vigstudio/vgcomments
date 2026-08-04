@@ -1,39 +1,72 @@
 @props([
     'key' => null,
     'value' => [],
+    'placeholder' => null,
 ])
 
-<div x-data='{
-    items: @json($value),
-    value: "",
-    addKey (){
-        this.items.push(this.value);
-        this.value = "";
-    },
-    removeKey (key){
-        this.items.splice(key, 1);
-    }
-}'>
-    <div class="mt-1 flex rounded-md ">
-        <x-vgcomment::form.input type="text" placeholder="Input key" x-model="value" @keydown.enter.prevent="addKey()" />
-        <span class="pl-3 pt-3 align-middle">
-            <button type="button" @click.prevent="addKey()" class="inline-flex items-center rounded border border-transparent bg-indigo-100 px-2.5 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                {{ __('vgcomment::admin.add') }}
-            </button>
-        </span>
+@php
+    $items = collect(is_array($value) ? $value : [])
+        ->map(fn ($item) => is_string($item) ? trim($item) : $item)
+        ->filter(fn ($item) => is_string($item) && $item !== '')
+        ->values()
+        ->all();
+@endphp
+
+<div
+    class="admin-tags"
+    x-data="{
+        items: @js($items),
+        draft: '',
+        error: '',
+        add() {
+            const value = this.draft.trim();
+            if (!value) {
+                this.error = @js(__('vgcomment::admin.tag_empty'));
+                return;
+            }
+            if (this.items.some((item) => item.toLowerCase() === value.toLowerCase())) {
+                this.error = @js(__('vgcomment::admin.tag_duplicate'));
+                return;
+            }
+            this.items.push(value);
+            this.draft = '';
+            this.error = '';
+        },
+        remove(index) {
+            this.items.splice(index, 1);
+            this.error = '';
+        }
+    }"
+>
+    <div class="admin-tags__composer">
+        <input
+            type="text"
+            class="admin-field"
+            placeholder="{{ $placeholder ?? __('vgcomment::admin.tag_placeholder') }}"
+            x-model="draft"
+            @keydown.enter.prevent="add()"
+            @input="error = ''"
+        >
+        <button type="button" class="btn-primary" @click.prevent="add()">
+            {{ __('vgcomment::admin.add') }}
+        </button>
     </div>
 
-    <template x-for="(item, index) in items" :key="index">
-        <div class="mt-3 ml-1 text-xs inline-flex items-center font-bold leading-sm px-3 py-1 rounded-full bg-white text-gray-700 border">
-            <span x-text="item"></span>
-            <button type="button" x-on:click="removeKey(index)" class="pl-3 inline-flex items-center rounded-full border border-transparent">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-            <x-vgcomment::form.input type="hidden" name="{{ $key }}[]" x-bind:value="item" />
-        </div>
+    <p class="admin-tags__error" x-show="error" x-text="error" x-cloak></p>
 
-    </template>
+    <div class="admin-tags__list" x-show="items.length">
+        <template x-for="(item, index) in items" :key="item + '-' + index">
+            <span class="admin-chip">
+                <span x-text="item"></span>
+                <button type="button" class="admin-chip__remove" @click="remove(index)" :aria-label="'Remove ' + item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
+                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                    </svg>
+                </button>
+                <input type="hidden" name="{{ $key }}[]" :value="item">
+            </span>
+        </template>
+    </div>
 
+    <p class="admin-tags__empty" x-show="!items.length" x-cloak>{{ __('vgcomment::admin.tag_empty_list') }}</p>
 </div>

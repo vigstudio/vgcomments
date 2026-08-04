@@ -1,112 +1,303 @@
 @extends('vgcomment::layouts.app')
+
+@section('title', __('vgcomment::admin.dashboard') . ' · VgComments')
+@section('heading', __('vgcomment::admin.comments'))
+@section('subheading', __('vgcomment::admin.dashboard_subtitle'))
+
 @section('content')
-    <header>
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <h1 class="text-3xl font-bold leading-tight tracking-tight text-gray-900">{{ __('vgcomment::admin.dashboard') }}</h1>
-        </div>
-    </header>
-    <main>
-        <div class="mx-auto max-w-7xl sm:px-2 lg:px-3" x-data="{
-            tab: '{{ request()->get('status') ? request()->get('status') : 'all' }}',
-        }">
-            <!-- Replace with your content -->
-            <div class="px-4 py-8 sm:px-0" id="app">
-                <div class="px-4 sm:px-6 lg:px-8">
-                    <div class="my-10">
-                        <div class="sm:hidden">
-                            <label for="tabs" class="sr-only">{{ __('vgcomment:admin.select_tab') }}</label>
-                            <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
-                            <select id="tabs" name="tabs" @change="tab = $event.target.value;" class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                                @foreach ($tabs as $key)
-                                    <option value="{{ $key }}">{{ __('vgcomment::admin.' . $key) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="hidden sm:block">
-                            <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
-                                @foreach ($tabs as $key)
-                                    <a href="{{ route('vgcomments.admin.dashboard', ['status' => $key]) }}"
-                                       x-bind:class="{
-                                           'text-gray-500 hover:text-gray-700 group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-sm font-medium text-center hover:bg-gray-50 focus:z-10': tab !== '{{ $key }}',
-                                           'text-gray-900 rounded-l-lg group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-sm font-medium text-center hover:bg-gray-50 focus:z-10': tab === '{{ $key }}',
-                                       }"
-                                       aria-current="page">
-                                        <span>{{ __('vgcomment::admin.' . $key) }}</span>
-                                        <span x-show="tab !== '{{ $key }}'" aria-hidden="true" class="bg-transparent absolute inset-x-0 bottom-0 h-0.5"></span>
-                                        <span x-show="tab === '{{ $key }}'" aria-hidden="true" class="bg-indigo-500 absolute inset-x-0 bottom-0 h-0.5"></span>
-                                    </a>
-                                @endforeach
-                            </nav>
-                        </div>
-                    </div>
+@php
+    $activeStatus = $filters['status'] ?? 'all';
+    $queryBase = array_filter([
+        'q' => $filters['q'] ?? null,
+        'page_id' => $filters['page_id'] ?? null,
+        'from' => $filters['from'] ?? null,
+        'to' => $filters['to'] ?? null,
+    ], fn ($value) => filled($value));
+@endphp
 
-                    <div class="sm:flex sm:items-center">
-                        <div class="sm:flex-auto">
-                            <h1 class="text-xl font-semibold text-gray-900">{{ __('vgcomment::admin.comments_table') }} ({{ $comments->total() }})</h1>
-                        </div>
-                    </div>
+<div
+    x-data="{
+        selected: [],
+        drawer: null,
+        toggleAll(event) {
+            const ids = Array.from(document.querySelectorAll('[data-comment-id]')).map((el) => Number(el.dataset.commentId));
+            this.selected = event.target.checked ? ids : [];
+        },
+        toggleOne(id, checked) {
+            if (checked) {
+                if (!this.selected.includes(id)) this.selected.push(id);
+            } else {
+                this.selected = this.selected.filter((item) => item !== id);
+            }
+        },
+        openDrawer(comment) {
+            this.drawer = comment;
+        },
+        closeDrawer() {
+            this.drawer = null;
+        },
+        confirmBulk(action) {
+            if (!this.selected.length) return false;
+            const risky = ['delete', 'force_delete', 'spam', 'trash'].includes(action);
+            if (!risky) return true;
+            return window.confirm(@js(__('vgcomment::admin.bulk_confirm')));
+        }
+    }"
+    class="space-y-6"
+>
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
+        @foreach ($tabs as $tab)
+            <a
+                href="{{ route('vgcomments.admin.dashboard', array_merge($queryBase, ['status' => $tab['key']])) }}"
+                @class([
+                    'admin-stat',
+                    'admin-stat--active' => $activeStatus === $tab['key'],
+                ])
+            >
+                <span class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ $tab['label'] }}</span>
+                <span class="text-2xl font-semibold text-slate-900">{{ number_format($tab['count']) }}</span>
+            </a>
+        @endforeach
+    </div>
 
-                    <div class="mt-8 flex flex-col">
-                        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                            <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-                                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                                    <table class="min-w-full divide-y divide-gray-300">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">{{ __('vgcomment::admin.author_name') }}</th>
-                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ __('vgcomment::admin.user_agent') }}</th>
-                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ __('vgcomment::admin.content') }}</th>
-                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ __('vgcomment::admin.status') }}</th>
-                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ __('vgcomment::admin.has_report') }}</th>
-                                                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                                                    <span class="sr-only">Edit</span>
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-200 bg-white">
-                                            @foreach ($comments as $comment)
-                                                <tr>
-                                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
-                                                        <div class="flex items-center">
-                                                            <div class="h-10 w-10 flex-shrink-0">
-                                                                <img class="h-10 w-10 rounded-full" src="{{ $comment->getAuthorAvatarAttribute() }}" alt="">
-                                                            </div>
-                                                            <div class="ml-4">
-                                                                <div class="font-medium text-gray-900">{{ $comment->author_name }}</div>
-                                                                <div class="text-gray-500">{{ $comment->author_email }}</div>
-                                                                <div class="text-gray-500">{{ $comment->author_ip }}</div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td class="px-3 py-4 text-sm text-gray-500">
-                                                        <div class="text-gray-900">{{ $comment->time }}</div>
-                                                        <div class="text-gray-500">{{ $comment->user_agent }}</div>
-                                                    </td>
-                                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 min-w-[400px]">
-                                                        <div class="text-gray-500">{{ Str::limit($comment->content, 50, '........') }}</div>
-                                                        @includeWhen(!$comment->trashed(), 'vgcomment::dashboard._td-content', ['comment' => $comment])
-                                                    </td>
-                                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                        @include('vgcomment::dashboard._td-status', ['comment' => $comment])
-                                                    </td>
-                                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                        <span class="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">{{ $comment->reports()->count() }}</span>
-                                                    </td>
-                                                    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                                        @include('vgcomment::dashboard._td-action', ['comment' => $comment])
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+    <form method="GET" action="{{ route('vgcomments.admin.dashboard') }}" class="admin-card p-4">
+        <input type="hidden" name="status" value="{{ $activeStatus }}">
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div class="xl:col-span-2">
+                <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('vgcomment::admin.search') }}</label>
+                <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="{{ __('vgcomment::admin.search_placeholder') }}" class="admin-input">
             </div>
-            <!-- /End replace -->
+            <div>
+                <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('vgcomment::admin.page_id') }}</label>
+                <input type="text" name="page_id" value="{{ $filters['page_id'] ?? '' }}" class="admin-input">
+            </div>
+            <div>
+                <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('vgcomment::admin.from') }}</label>
+                <input type="date" name="from" value="{{ $filters['from'] ?? '' }}" class="admin-input">
+            </div>
+            <div>
+                <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('vgcomment::admin.to') }}</label>
+                <input type="date" name="to" value="{{ $filters['to'] ?? '' }}" class="admin-input">
+            </div>
         </div>
-    </main>
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+            <button type="submit" class="btn-primary">{{ __('vgcomment::admin.apply_filters') }}</button>
+            <a href="{{ route('vgcomments.admin.dashboard', ['status' => $activeStatus]) }}" class="btn-secondary">{{ __('vgcomment::admin.reset_filters') }}</a>
+            <div class="sm:hidden grow">
+                <label class="sr-only">{{ __('vgcomment::admin.select_tab') }}</label>
+                <select
+                    class="admin-input"
+                    onchange="window.location.href=this.value"
+                >
+                    @foreach ($tabs as $tab)
+                        <option
+                            value="{{ route('vgcomments.admin.dashboard', array_merge($queryBase, ['status' => $tab['key']])) }}"
+                            @selected($activeStatus === $tab['key'])
+                        >
+                            {{ $tab['label'] }} ({{ $tab['count'] }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+    </form>
+
+    <div
+        x-show="selected.length"
+        x-cloak
+        class="admin-card sticky top-20 z-20 flex flex-wrap items-center gap-2 border-sky-200 bg-sky-50/90 p-3 backdrop-blur"
+    >
+        <p class="mr-2 text-sm font-medium text-slate-700">
+            <span x-text="selected.length"></span> {{ __('vgcomment::admin.selected') }}
+        </p>
+
+        @foreach ([
+            'approve' => __('vgcomment::admin.approved'),
+            'pending' => __('vgcomment::admin.pending'),
+            'spam' => __('vgcomment::admin.spam'),
+            'trash' => __('vgcomment::admin.trash'),
+            'delete' => __('vgcomment::admin.delete'),
+            'restore' => __('vgcomment::admin.restore'),
+            'force_delete' => __('vgcomment::admin.force_delete'),
+        ] as $action => $label)
+            <form method="POST" action="{{ route('vgcomments.admin.comments.bulk') }}" @submit="if (!confirmBulk('{{ $action }}')) $event.preventDefault()">
+                @csrf
+                <input type="hidden" name="action" value="{{ $action }}">
+                <template x-for="id in selected" :key="id">
+                    <input type="hidden" name="ids[]" :value="id">
+                </template>
+                <button type="submit" @class([
+                    'btn-success' => $action === 'approve',
+                    'btn-orange' => $action === 'pending',
+                    'btn-danger' => in_array($action, ['spam', 'trash', 'delete', 'force_delete'], true),
+                    'btn' => $action === 'restore',
+                ])>{{ $label }}</button>
+            </form>
+        @endforeach
+    </div>
+
+    <div class="admin-card overflow-hidden">
+        <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+            <h2 class="text-sm font-semibold text-slate-900">
+                {{ __('vgcomment::admin.comments_table') }}
+                <span class="font-normal text-slate-500">({{ number_format($comments->total()) }})</span>
+            </h2>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">
+                            <input type="checkbox" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" @change="toggleAll($event)">
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('vgcomment::admin.author_name') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('vgcomment::admin.content') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('vgcomment::admin.status') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('vgcomment::admin.has_report') }}</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('vgcomment::admin.actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    @forelse ($comments as $comment)
+                        @php
+                            $drawerPayload = [
+                                'id' => $comment->id,
+                                'uuid' => $comment->uuid,
+                                'author_name' => $comment->author_name,
+                                'author_email' => $comment->author_email,
+                                'author_ip' => $comment->author_ip,
+                                'avatar' => $comment->getAuthorAvatarAttribute(),
+                                'content' => $comment->content,
+                                'content_html' => $comment->content_html,
+                                'status' => $comment->trashed() ? 'deleted' : $comment->status,
+                                'reports_count' => $comment->reports_count ?? 0,
+                                'page_id' => $comment->page_id,
+                                'url' => $comment->url,
+                                'time' => optional($comment->created_at)->diffForHumans(),
+                                'user_agent' => \Illuminate\Support\Str::limit((string) $comment->user_agent, 120),
+                                'trashed' => $comment->trashed(),
+                            ];
+                        @endphp
+                        <tr class="hover:bg-slate-50/80" data-comment-id="{{ $comment->id }}">
+                            <td class="px-4 py-4 align-top">
+                                <input
+                                    type="checkbox"
+                                    class="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                                    :checked="selected.includes({{ $comment->id }})"
+                                    @change="toggleOne({{ $comment->id }}, $event.target.checked)"
+                                >
+                            </td>
+                            <td class="px-4 py-4 align-top">
+                                <div class="flex items-start gap-3">
+                                    <img src="{{ $comment->getAuthorAvatarAttribute() }}" alt="" class="h-10 w-10 rounded-full object-cover ring-1 ring-slate-200">
+                                    <div class="min-w-0">
+                                        <p class="truncate text-sm font-semibold text-slate-900">{{ $comment->author_name ?: '—' }}</p>
+                                        <p class="truncate text-xs text-slate-500">{{ $comment->author_email ?: '—' }}</p>
+                                        <p class="truncate text-xs text-slate-400">{{ $comment->author_ip }}</p>
+                                        <p class="mt-1 text-xs text-slate-400">{{ optional($comment->created_at)->diffForHumans() }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4 align-top">
+                                <p class="max-w-xl text-sm text-slate-700">{{ \Illuminate\Support\Str::limit($comment->content, 160) }}</p>
+                                @if ($comment->page_id)
+                                    <p class="mt-1 text-xs text-slate-400">page: {{ $comment->page_id }}</p>
+                                @endif
+                                @include('vgcomment::dashboard._td-content', ['comment' => $comment])
+                            </td>
+                            <td class="px-4 py-4 align-top">
+                                @include('vgcomment::dashboard._td-status', ['comment' => $comment])
+                            </td>
+                            <td class="px-4 py-4 align-top">
+                                <span @class([
+                                    'admin-badge',
+                                    'bg-red-50 text-red-700' => ($comment->reports_count ?? 0) > 0,
+                                    'bg-slate-100 text-slate-500' => ($comment->reports_count ?? 0) === 0,
+                                ])>{{ $comment->reports_count ?? 0 }}</span>
+                            </td>
+                            <td class="px-4 py-4 align-top text-right">
+                                <div class="flex flex-wrap justify-end gap-1">
+                                    <button type="button" class="btn" @click="openDrawer(@js($drawerPayload))">{{ __('vgcomment::admin.edit') }}</button>
+                                    @include('vgcomment::dashboard._td-action', ['comment' => $comment])
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-4 py-16 text-center text-sm text-slate-500">
+                                {{ __('vgcomment::admin.empty_comments') }}
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($comments->hasPages())
+            <div class="border-t border-slate-200 px-4 py-3">
+                {{ $comments->links('vgcomment::layouts.pagination.tailwind') }}
+            </div>
+        @endif
+    </div>
+
+    <div
+        x-show="drawer"
+        x-cloak
+        class="fixed inset-0 z-50"
+        @keydown.escape.window="closeDrawer()"
+    >
+        <div class="absolute inset-0 bg-slate-900/40" @click="closeDrawer()"></div>
+        <aside class="admin-drawer ml-auto flex h-full flex-col" x-show="drawer" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0">
+            <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                <div>
+                    <h3 class="text-base font-semibold text-slate-900" x-text="drawer?.author_name || '—'"></h3>
+                    <p class="text-xs text-slate-500" x-text="drawer?.time"></p>
+                </div>
+                <button type="button" class="btn-secondary" @click="closeDrawer()">{{ __('vgcomment::admin.close') }}</button>
+            </div>
+
+            <div class="flex-1 space-y-5 overflow-y-auto px-5 py-5" x-show="drawer">
+                <div class="rounded-lg bg-slate-50 p-3 text-sm text-slate-700" x-html="drawer?.content_html"></div>
+
+                <dl class="grid grid-cols-1 gap-3 text-sm">
+                    <div>
+                        <dt class="text-xs uppercase tracking-wide text-slate-400">Email</dt>
+                        <dd class="text-slate-700" x-text="drawer?.author_email || '—'"></dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs uppercase tracking-wide text-slate-400">IP</dt>
+                        <dd class="text-slate-700" x-text="drawer?.author_ip || '—'"></dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs uppercase tracking-wide text-slate-400">{{ __('vgcomment::admin.page_id') }}</dt>
+                        <dd class="text-slate-700" x-text="drawer?.page_id || '—'"></dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs uppercase tracking-wide text-slate-400">User agent</dt>
+                        <dd class="break-all text-slate-700" x-text="drawer?.user_agent || '—'"></dd>
+                    </div>
+                </dl>
+
+                <template x-if="drawer && !drawer.trashed">
+                    <form method="POST" :action="'{{ url(trim(config('vgcomment.prefix'), '/').'/admin/comment') }}/' + drawer.id + '/update'" :key="'edit-' + drawer.id">
+                        @csrf
+                        @method('PUT')
+                        <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('vgcomment::admin.status') }}</label>
+                        <select name="status" class="admin-input mb-3">
+                            @foreach (\Vigstudio\VgComment\Models\Comment::STATUSES as $status)
+                                <option value="{{ $status }}" :selected="drawer.status === '{{ $status }}'">{{ __('vgcomment::admin.'.$status) }}</option>
+                            @endforeach
+                        </select>
+                        <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('vgcomment::admin.content') }}</label>
+                        <textarea name="content" rows="6" class="admin-input" :value="drawer.content"></textarea>
+                        <button type="submit" class="btn-primary mt-3 w-full">{{ __('vgcomment::admin.save_changes') }}</button>
+                    </form>
+                </template>
+
+                <a x-show="drawer?.url" :href="drawer?.url" target="_blank" rel="noopener" class="btn-secondary inline-flex w-full">{{ __('vgcomment::admin.view_page') }}</a>
+            </div>
+        </aside>
+    </div>
+</div>
 @endsection
