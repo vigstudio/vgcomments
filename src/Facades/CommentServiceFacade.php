@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static int bulkDelete(array $ids)
  * @method static int bulkRestore(array $ids)
  * @method static int bulkForceDelete(array $ids)
+ * @method static void softDeleteComment(\Vigstudio\VgComment\Models\Comment $comment)
+ * @method static void restoreCommentTree(\Vigstudio\VgComment\Models\Comment $comment, bool $approve = false)
  * @method static \Illuminate\Http\Resources\Json\JsonResource findById(int $id)
  * @method static \Illuminate\Http\Resources\Json\JsonResource store(array $req)
  * @method static bool update(array $req, string $uuid)

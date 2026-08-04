@@ -2,6 +2,12 @@
 
 All notable changes to `vgcomments` will be documented in this file
 
+## 2.0.8 - 2026-08-04
+
+- Fix admin moderation freshness: disable query cache on admin lists/counts so delete/status/restore reflect immediately
+- Soft-delete / restore / bulk status now persist correctly (including actions from the deleted tab) and flush query cache
+- Deleted tab hides cascade-deleted replies; restore sets status to approved; list shows reply-to context
+
 ## 2.0.7 - 2026-08-04
 
 - Harden `registerFilesForComment` to skip attachment entries missing a UUID (avoids undefined-array-key 500s from malformed Livewire payloads)

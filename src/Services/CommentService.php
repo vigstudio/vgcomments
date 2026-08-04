@@ -98,7 +98,22 @@ class CommentService
             return 0;
         }
 
-        return Comment::query()->whereIn('id', $ids)->update(['status' => $status]);
+        $count = 0;
+
+        // withTrashed: status actions from the deleted tab must restore + update.
+        // Per-model update fires query-cache flush; mass update() does not.
+        Comment::withTrashed()->whereIn('id', $ids)->each(function (Comment $comment) use ($status, &$count) {
+            if ($comment->trashed()) {
+                $this->restoreCommentTree($comment);
+            }
+
+            $comment->update(['status' => $status]);
+            $count++;
+        });
+
+        Comment::flushQueryCache();
+
+        return $count;
     }
 
     public function bulkDelete(array $ids): int
@@ -112,10 +127,11 @@ class CommentService
         $count = 0;
 
         Comment::query()->whereIn('id', $ids)->each(function (Comment $comment) use (&$count) {
-            $comment->replies()->delete();
-            $comment->delete();
+            $this->softDeleteComment($comment);
             $count++;
         });
+
+        Comment::flushQueryCache();
 
         return $count;
     }
@@ -131,12 +147,61 @@ class CommentService
         $count = 0;
 
         Comment::onlyTrashed()->whereIn('id', $ids)->each(function (Comment $comment) use (&$count) {
-            $comment->restore();
-            $comment->replies()->onlyTrashed()->restore();
+            $this->restoreCommentTree($comment, true);
             $count++;
         });
 
+        Comment::flushQueryCache();
+
         return $count;
+    }
+
+    public function softDeleteComment(Comment $comment): void
+    {
+        if (is_null($comment->parent_id)) {
+            // Flat root_id relation covers the whole thread.
+            $comment->replies()->delete();
+        } else {
+            $this->softDeleteDescendants((int) $comment->id);
+        }
+
+        $comment->delete();
+    }
+
+    public function restoreCommentTree(Comment $comment, bool $approve = false): void
+    {
+        if (! $comment->trashed()) {
+            if ($approve) {
+                $comment->update(['status' => Comment::STATUS_APPROVED]);
+            }
+
+            return;
+        }
+
+        $comment->restore();
+
+        if (is_null($comment->parent_id)) {
+            $comment->replies()->onlyTrashed()->restore();
+        }
+
+        if ($approve) {
+            $comment->refresh();
+            $comment->update(['status' => Comment::STATUS_APPROVED]);
+
+            if (is_null($comment->parent_id)) {
+                Comment::query()
+                    ->where('root_id', $comment->id)
+                    ->update(['status' => Comment::STATUS_APPROVED]);
+            }
+        }
+    }
+
+    protected function softDeleteDescendants(int $parentId): void
+    {
+        Comment::query()->where('parent_id', $parentId)->each(function (Comment $child) {
+            $this->softDeleteDescendants((int) $child->id);
+            $child->delete();
+        });
     }
 
     public function bulkForceDelete(array $ids): int
@@ -150,13 +215,20 @@ class CommentService
         $count = 0;
 
         Comment::onlyTrashed()->whereIn('id', $ids)->each(function (Comment $comment) use (&$count) {
-            $comment->replies()->withTrashed()->forceDelete();
+            if (is_null($comment->parent_id)) {
+                $comment->replies()->withTrashed()->forceDelete();
+            } else {
+                Comment::withTrashed()->where('parent_id', $comment->id)->forceDelete();
+            }
+
             $comment->reactions()->forceDelete();
             $comment->reports()->forceDelete();
             $comment->files()->forceDelete();
             $comment->forceDelete();
             $count++;
         });
+
+        Comment::flushQueryCache();
 
         return $count;
     }

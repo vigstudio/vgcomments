@@ -42,6 +42,7 @@ return [
     'spam' => 'Spam',
     'trash' => 'Trash',
     'deleted' => 'Deleted',
+    'reply_to' => 'Reply to #:id',
     'force_delete' => 'Delete forever',
     'force_delete_confirm' => 'Permanently delete this comment and related data?',
     'delete_confirm' => 'Soft-delete this comment?',

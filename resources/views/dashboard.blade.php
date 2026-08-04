@@ -200,6 +200,14 @@
                                 </div>
                             </td>
                             <td class="px-4 py-4 align-top">
+                                @if ($comment->parent_id)
+                                    <p class="mb-1 text-xs font-medium text-slate-500">
+                                        {{ __('vgcomment::admin.reply_to', ['id' => $comment->parent_id]) }}
+                                        @if ($comment->relationLoaded('parent') && $comment->parent)
+                                            <span class="font-normal text-slate-400">· {{ \Illuminate\Support\Str::limit($comment->parent->author_name ?: $comment->parent->content, 40) }}</span>
+                                        @endif
+                                    </p>
+                                @endif
                                 <p class="max-w-xl text-sm text-slate-700">{{ \Illuminate\Support\Str::limit($comment->content, 160) }}</p>
                                 @if ($comment->page_id)
                                     <p class="mt-1 text-xs text-slate-400">page: {{ $comment->page_id }}</p>

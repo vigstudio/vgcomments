@@ -201,7 +201,13 @@ class AdminController extends Controller
             return back()->with('error', __('vgcomment::admin.nothing_to_update'));
         }
 
+        if ($comment->trashed() && isset($payload['status'])) {
+            CommentServiceFacade::restoreCommentTree($comment);
+            $comment->refresh();
+        }
+
         $comment->update($payload);
+        Comment::flushQueryCache();
 
         return back()->with('success', __('vgcomment::admin.comment_updated'));
     }
@@ -210,8 +216,8 @@ class AdminController extends Controller
     {
         $comment = Comment::findOrFail($id);
 
-        $comment->replies()->delete();
-        $comment->delete();
+        CommentServiceFacade::softDeleteComment($comment);
+        Comment::flushQueryCache();
 
         return back()->with('success', __('vgcomment::admin.comment_deleted'));
     }
@@ -219,8 +225,9 @@ class AdminController extends Controller
     public function restoreComment($id): RedirectResponse
     {
         $comment = Comment::onlyTrashed()->findOrFail($id);
-        $comment->restore();
-        $comment->replies()->onlyTrashed()->restore();
+
+        CommentServiceFacade::restoreCommentTree($comment, true);
+        Comment::flushQueryCache();
 
         return back()->with('success', __('vgcomment::admin.comment_restored'));
     }
@@ -229,11 +236,17 @@ class AdminController extends Controller
     {
         $comment = Comment::onlyTrashed()->findOrFail($id);
 
-        $comment->replies()->withTrashed()->forceDelete();
+        if (is_null($comment->parent_id)) {
+            $comment->replies()->withTrashed()->forceDelete();
+        } else {
+            Comment::withTrashed()->where('parent_id', $comment->id)->forceDelete();
+        }
+
         $comment->reactions()->forceDelete();
         $comment->reports()->forceDelete();
         $comment->files()->forceDelete();
         $comment->forceDelete();
+        Comment::flushQueryCache();
 
         return back()->with('success', __('vgcomment::admin.comment_force_deleted'));
     }

@@ -99,12 +99,17 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
     {
         $status = $req['status'] ?? 'all';
 
+        // Admin moderation must never serve stale query-cache rows after delete/status changes.
         $query = $this->query()
-            ->with(['responder'])
+            ->dontCache()
+            ->with([
+                'responder',
+                'parent' => fn ($builder) => $builder->withTrashed()->dontCache(),
+            ])
             ->withCount('reports');
 
         if ($status === 'deleted') {
-            $query->onlyTrashed();
+            $this->scopeAdminDeleted($query);
         } elseif ($status === 'reported') {
             $query->has('reports');
         } elseif ($status !== 'all' && in_array($status, Comment::STATUSES, true)) {
@@ -141,11 +146,15 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
     public function getAdminStatusCounts(): array
     {
         $byStatus = $this->query()
+            ->dontCache()
             ->selectRaw('status, COUNT(*) as aggregate')
             ->groupBy('status')
             ->pluck('aggregate', 'status')
             ->map(fn ($count) => (int) $count)
             ->all();
+
+        $deletedQuery = $this->query()->dontCache();
+        $this->scopeAdminDeleted($deletedQuery);
 
         return [
             'all' => (int) array_sum($byStatus),
@@ -153,9 +162,29 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
             'approved' => $byStatus[Comment::STATUS_APPROVED] ?? 0,
             'spam' => $byStatus[Comment::STATUS_SPAM] ?? 0,
             'trash' => $byStatus[Comment::STATUS_TRASH] ?? 0,
-            'reported' => (int) $this->query()->has('reports')->count(),
-            'deleted' => (int) $this->query()->onlyTrashed()->count(),
+            'reported' => (int) $this->query()->dontCache()->has('reports')->count(),
+            'deleted' => (int) $deletedQuery->count(),
         ];
+    }
+
+    /**
+     * Soft-deleted comments for the admin "deleted" tab.
+     * Hides cascade-deleted replies (parent also trashed) so the list is not flooded
+     * when a root thread is soft-deleted.
+     */
+    protected function scopeAdminDeleted(Builder $query): void
+    {
+        $table = $query->getModel()->getTable();
+
+        $query->onlyTrashed()->where(function (Builder $builder) use ($table) {
+            $builder->whereNull($table.'.parent_id')
+                ->orWhereNotExists(function ($sub) use ($table) {
+                    $sub->selectRaw('1')
+                        ->from($table.' as vg_parent_comments')
+                        ->whereColumn('vg_parent_comments.id', $table.'.parent_id')
+                        ->whereNotNull('vg_parent_comments.deleted_at');
+                });
+        });
     }
 
     public function hasDupicate(array $request): bool
