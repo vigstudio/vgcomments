@@ -243,6 +243,7 @@ class AdminController extends Controller
         }
 
         $comment->reactions()->forceDelete();
+        $comment->votes()->forceDelete();
         $comment->reports()->forceDelete();
         $comment->files()->forceDelete();
         $comment->forceDelete();

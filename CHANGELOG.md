@@ -2,6 +2,12 @@
 
 All notable changes to `vgcomments` will be documented in this file
 
+## 2.0.9 - 2026-08-05
+
+- Add upvote/downvote support (`vgcomment_votes` migration, Vote model, API `POST comments/{uuid}/vote`)
+- Expose vote scores and the current user vote on comment resources
+- Add `votes_enabled` config toggle
+
 ## 2.0.8 - 2026-08-04
 
 - Fix admin moderation freshness: disable query cache on admin lists/counts so delete/status/restore reflect immediately

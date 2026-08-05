@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use Vigstudio\VgComment\Models\Comment;
 use Vigstudio\VgComment\Models\Reaction;
 use Vigstudio\VgComment\Models\Report;
+use Vigstudio\VgComment\Models\Vote;
 use Vigstudio\VgComment\Services\GetAuthenticatableService;
 use Vigstudio\VgComment\Facades\MacroableFacades;
 use Vigstudio\VgComment\Policies\CommentPolicy;
@@ -63,6 +64,10 @@ class VgCommentServiceProvider extends ServiceProvider
 
             $authModel::resolveRelationUsing('reactions', function ($model) {
                 return $model->morphMany(Reaction::class, 'reactable');
+            });
+
+            $authModel::resolveRelationUsing('votes', function ($model) {
+                return $model->morphMany(Vote::class, 'voterable');
             });
 
             MacroableFacades::addMacro($authModel, 'react', function (Comment $comment, string $type) {

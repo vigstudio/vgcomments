@@ -14,6 +14,7 @@ use Vigstudio\VgComment\Http\Traits\CommentValidator;
 use Vigstudio\VgComment\Http\Traits\ThrottlesPosts;
 use Vigstudio\VgComment\Models\Comment;
 use Vigstudio\VgComment\Models\Reaction;
+use Vigstudio\VgComment\Models\Vote;
 use Vigstudio\VgComment\Repositories\Interface\CommentInterface;
 use Vigstudio\VgComment\Repositories\Interface\FileInterface;
 use Vigstudio\VgComment\Repositories\Interface\ReactionInterface;
@@ -222,6 +223,7 @@ class CommentService
             }
 
             $comment->reactions()->forceDelete();
+            $comment->votes()->forceDelete();
             $comment->reports()->forceDelete();
             $comment->files()->forceDelete();
             $comment->forceDelete();
@@ -381,6 +383,140 @@ class CommentService
         $this->flushReactionCaches($comment);
 
         return $ok;
+    }
+
+    /**
+     * Toggle upvote/downvote. Same value removes the vote; opposite value switches.
+     *
+     * @return array{upvotes: int, downvotes: int, score: int, user_vote: int|null}|false
+     */
+    public function vote(string $uuid, int $value): array|false
+    {
+        if (! ($this->config['votes_enabled'] ?? true)) {
+            session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
+
+            return false;
+        }
+
+        if (! in_array($value, [Vote::UP, Vote::DOWN], true)) {
+            session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
+
+            return false;
+        }
+
+        $comment = $this->commentRepository->findByUuid($uuid);
+
+        if (! $comment) {
+            session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
+
+            return false;
+        }
+
+        $auth = $this->getAuth();
+
+        if ($auth) {
+            $this->applyVote($comment, get_class($auth), (int) $auth->getAuthIdentifier(), $value);
+            $this->flushVoteCaches($comment);
+
+            return $this->voteSummary($comment->fresh());
+        }
+
+        if (! ($this->config['allow_guests'] ?? false)) {
+            session()->push('alert', ['error', trans('vgcomment::validation.errors.not_authorized')]);
+
+            return false;
+        }
+
+        [$voterableType, $voterableId] = $this->guestReactorIdentity();
+        $this->applyVote($comment, $voterableType, $voterableId, $value);
+        $this->flushVoteCaches($comment);
+
+        return $this->voteSummary($comment->fresh());
+    }
+
+    /**
+     * @return array{upvotes: int, downvotes: int, score: int, user_vote: int|null}
+     */
+    public function voteSummary(?Comment $comment): array
+    {
+        if (! $comment) {
+            return [
+                'upvotes' => 0,
+                'downvotes' => 0,
+                'score' => 0,
+                'user_vote' => null,
+            ];
+        }
+
+        $upvotes = (int) ($comment->upvotes ?? 0);
+        $downvotes = (int) ($comment->downvotes ?? 0);
+
+        return [
+            'upvotes' => $upvotes,
+            'downvotes' => $downvotes,
+            'score' => $upvotes - $downvotes,
+            'user_vote' => $comment->user_vote,
+        ];
+    }
+
+    protected function applyVote(Comment $comment, string $voterableType, int $voterableId, int $value): void
+    {
+        $existing = Vote::query()
+            ->where('comment_id', $comment->getKey())
+            ->where('voterable_type', $voterableType)
+            ->where('voterable_id', $voterableId)
+            ->first();
+
+        if ($existing && (int) $existing->value === $value) {
+            $existing->delete();
+        } elseif ($existing) {
+            $existing->update(['value' => $value]);
+        } else {
+            Vote::query()->create([
+                'comment_id' => $comment->getKey(),
+                'comment_uuid' => $comment->getUuid(),
+                'value' => $value,
+                'voterable_type' => $voterableType,
+                'voterable_id' => $voterableId,
+            ]);
+        }
+
+        $this->recountVotes($comment);
+    }
+
+    protected function recountVotes(Comment $comment): void
+    {
+        $upvotes = (int) Vote::query()->where('comment_id', $comment->getKey())->where('value', Vote::UP)->count();
+        $downvotes = (int) Vote::query()->where('comment_id', $comment->getKey())->where('value', Vote::DOWN)->count();
+
+        $comment->forceFill([
+            'upvotes' => $upvotes,
+            'downvotes' => $downvotes,
+        ])->save();
+    }
+
+    protected function flushVoteCaches(?Comment $comment = null): void
+    {
+        Comment::flushQueryCache();
+        Vote::flushQueryCache();
+
+        if (! $comment) {
+            return;
+        }
+
+        $hash = vgcomment_page_hash(
+            $comment->page_id,
+            $comment->commentable_id,
+            $comment->commentable_type
+        );
+
+        $tags = [
+            'vigcomment_vote_releation_' . $hash,
+            'vigcomment_reaction_replies_' . $hash,
+        ];
+
+        Comment::flushQueryCache($tags);
+        Vote::flushQueryCache($tags);
     }
 
     protected function flushReactionCaches(?Comment $comment = null): void

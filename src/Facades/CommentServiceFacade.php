@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static bool registerFilesForComment(\Vigstudio\VgComment\Models\Comment $comment, array $files)
  * @method static bool reaction(string $uuid, string $type)
  * @method static bool deleteReaction(string $uuid, string $type)
+ * @method static array|false vote(string $uuid, int $value)
+ * @method static array voteSummary(\Vigstudio\VgComment\Models\Comment|null $comment)
  * @method static bool report(string $uuid)
  * @method static \Illuminate\Auth\Access\Response authorize(mixed $ability, mixed|array $arguments = [])
  * @method static \Illuminate\Auth\Access\Response authorizeForUser(\Illuminate\Contracts\Auth\Authenticatable|mixed $user, mixed $ability, mixed|array $arguments = [])

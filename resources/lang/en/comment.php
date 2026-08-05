@@ -21,6 +21,8 @@ return [
     'delete' => 'Delete',
     'report' => 'Report',
     'add_reaction' => 'Add reaction',
+    'upvote' => 'Upvote',
+    'downvote' => 'Downvote',
     'more_actions' => 'More actions',
     'submit' => 'Submit',
     'cancel' => 'Cancel',

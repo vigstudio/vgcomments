@@ -35,6 +35,12 @@ class ReplieResource extends JsonResource
                 : [],
             'files' => FileResource::collection($this->files)->toArray($request),
             'reactions' => ReactionResource::collection($this->reactions)->toArray($request),
+            'votes' => [
+                'upvotes' => (int) ($this->upvotes ?? 0),
+                'downvotes' => (int) ($this->downvotes ?? 0),
+                'score' => (int) ($this->upvotes ?? 0) - (int) ($this->downvotes ?? 0),
+                'user_vote' => $this->user_vote,
+            ],
         ];
     }
 }

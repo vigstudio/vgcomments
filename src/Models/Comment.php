@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Vigstudio\VgComment\Facades\FormatterFacade;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Gate;
+use Vigstudio\VgComment\Services\GetAuthenticatableService;
 
 class Comment extends BaseModel
 {
@@ -49,11 +50,15 @@ class Comment extends BaseModel
         'root_id',
         'parent_id',
         'point',
+        'upvotes',
+        'downvotes',
         'reactions_data',
     ];
 
     protected $casts = [
         'reactions_data' => 'array',
+        'upvotes' => 'integer',
+        'downvotes' => 'integer',
     ];
 
     public function commentable(): MorphTo
@@ -70,6 +75,9 @@ class Comment extends BaseModel
         return $this->hasMany(static::class, 'root_id')->with([
             'reactions' => function ($query) {
                 return $query->cacheTags(['vigcomment_reaction_releation_' . $this->uuid]);
+            },
+            'votes' => function ($query) {
+                return $query->cacheTags(['vigcomment_vote_releation_' . $this->uuid]);
             },
             'parent' => function ($query) {
                 return $query->cacheTags(['vigcomment_reaction_parent_' . $this->uuid]);
@@ -149,9 +157,56 @@ class Comment extends BaseModel
         return $this->hasMany(Reaction::class, 'comment_id');
     }
 
+    public function votes()
+    {
+        return $this->hasMany(Vote::class, 'comment_id');
+    }
+
     public function reports()
     {
         return $this->hasMany(Report::class, 'comment_id');
+    }
+
+    public function getScoreAttribute(): int
+    {
+        return (int) ($this->upvotes ?? 0) - (int) ($this->downvotes ?? 0);
+    }
+
+    /**
+     * Current viewer's vote: 1 (up), -1 (down), or null.
+     */
+    public function getUserVoteAttribute(): ?int
+    {
+        if ($this->relationLoaded('votes')) {
+            $mine = $this->votes->first(fn (Vote $vote) => (bool) $vote->user_voted);
+
+            return $mine ? (int) $mine->value : null;
+        }
+
+        $auth = GetAuthenticatableService::get();
+
+        if ($auth !== false) {
+            $vote = $this->votes()
+                ->where('voterable_type', get_class($auth))
+                ->where('voterable_id', $auth->getAuthIdentifier())
+                ->first();
+
+            return $vote ? (int) $vote->value : null;
+        }
+
+        $token = session()->get('vgcomment.guest_reactor');
+
+        if (! is_string($token) || $token === '') {
+            return null;
+        }
+
+        $guestId = (int) sprintf('%u', crc32($token));
+        $vote = $this->votes()
+            ->where('voterable_type', 'vgcomment_guest')
+            ->where('voterable_id', $guestId)
+            ->first();
+
+        return $vote ? (int) $vote->value : null;
     }
 
     public function files()

@@ -229,7 +229,8 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
     {
         match ($order) {
             'oldest' => $query->orderBy('created_at', 'asc'),
-            'popular' => $query->orderBy('point', 'desc'),
+            'popular' => $query->orderByRaw('(COALESCE(upvotes, 0) - COALESCE(downvotes, 0)) DESC')
+                ->orderBy('point', 'desc'),
             default => $query->orderBy('created_at', 'desc'),
         };
     }
@@ -243,6 +244,9 @@ class CommentReposirory extends EloquentReposirory implements CommentInterface
         return [
             'reactions' => function ($query) use ($hash) {
                 return $query->cacheTags(['vigcomment_reaction_releation_' . $hash]);
+            },
+            'votes' => function ($query) use ($hash) {
+                return $query->cacheTags(['vigcomment_vote_releation_' . $hash]);
             },
             'parent' => function ($query) use ($hash) {
                 return $query->cacheTags(['vigcomment_reaction_parent_' . $hash]);

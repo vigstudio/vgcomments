@@ -35,6 +35,7 @@ Route::middleware('web')
                 Route::delete('comments/{uuid}', [ApiCommentController::class, 'destroy'])->name('comments.destroy');
                 Route::post('comments/{uuid}/reactions', [ApiCommentController::class, 'react'])->name('comments.react');
                 Route::delete('comments/{uuid}/reactions', [ApiCommentController::class, 'unreact'])->name('comments.unreact');
+                Route::post('comments/{uuid}/vote', [ApiCommentController::class, 'vote'])->name('comments.vote');
                 Route::post('comments/{uuid}/report', [ApiCommentController::class, 'report'])->name('comments.report');
                 Route::post('preview', [ApiCommentController::class, 'preview'])->name('preview');
                 Route::post('files', [ApiCommentController::class, 'upload'])->name('files.upload');

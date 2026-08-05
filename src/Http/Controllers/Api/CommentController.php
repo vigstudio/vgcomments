@@ -66,7 +66,7 @@ class CommentController extends Controller
             CommentServiceFacade::registerFilesForComment($comment, $request->input('attachments', []));
         }
 
-        $comment->load(['replies', 'files', 'reactions', 'responder', 'parent']);
+        $comment->load(['replies', 'files', 'reactions', 'votes', 'responder', 'parent']);
         $comment->nestReplies();
 
         $alerts = collect(session()->pull('alert', []));
@@ -142,6 +142,24 @@ class CommentController extends Controller
         }
 
         return response()->json(['message' => 'ok']);
+    }
+
+    public function vote(Request $request, string $uuid): JsonResponse
+    {
+        $request->validate([
+            'value' => ['required', 'integer', Rule::in([1, -1])],
+        ]);
+
+        $summary = CommentServiceFacade::vote($uuid, (int) $request->input('value'));
+
+        if ($summary === false) {
+            return $this->alertErrorResponse(403);
+        }
+
+        return response()->json([
+            'message' => 'ok',
+            'data' => $summary,
+        ]);
     }
 
     public function report(string $uuid): JsonResponse

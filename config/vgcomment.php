@@ -22,6 +22,7 @@ return [
     | "comments"    : Comments Table
     | "files"       : Files Attachment Table
     | "reactions"   : Reactions Table
+    | "votes"       : Votes Table
     | "reports"     : Reports Table
     | "settings"    : Settings Table
     |
@@ -30,6 +31,7 @@ return [
         'comments' => 'vgcomments',
         'files' => 'vgcomment_files',
         'reactions' => 'vgcomment_reactions',
+        'votes' => 'vgcomment_votes',
         'reports' => 'vgcomment_reports',
         'settings' => 'vgcomment_settings',
     ],
@@ -64,6 +66,17 @@ return [
     |
     */
     'allow_guests' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Enable upvote / downvote on comments
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, each comment shows vote controls. Guests may vote when
+    | allow_guests is true (same session identity as reactions).
+    |
+    */
+    'votes_enabled' => true,
 
     /*
     |--------------------------------------------------------------------------
